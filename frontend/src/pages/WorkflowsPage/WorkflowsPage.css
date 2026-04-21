@@ -1,0 +1,183 @@
+/* Workflow Grid */
+.wf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.wf-card {
+  padding: 22px;
+}
+
+.wf-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.wf-card-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.wf-card-steps {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-glass);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.wf-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Steps Preview */
+.wf-steps-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--bg-glass);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glass);
+}
+
+.wf-step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wf-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wf-step-name {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* Instances */
+.wf-instances {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wf-instance-card {
+  padding: 20px;
+}
+
+.wf-instance-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.wf-instance-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.wf-instance-starter {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Progress Bar */
+.wf-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wf-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-glass);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.wf-progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.wf-progress-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Steps Form */
+.wf-steps-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wf-step-form-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.wf-step-form-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.wf-step-form-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wf-step-form-fields .form-input {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.wf-section {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 580px) {
+  .wf-grid {
+    grid-template-columns: 1fr;
+  }
+}

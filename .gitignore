@@ -1,0 +1,12 @@
+# Ortam değişkenleri (şifreler burada!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+instance/
+
+# Node
+node_modules/
+dist/
