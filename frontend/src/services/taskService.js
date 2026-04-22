@@ -29,6 +29,21 @@ const taskService = {
   async getStats() {
     const response = await api.get('/tasks/stats');
     return response.data;
+  },
+
+  async getCalendarTasks(month) {
+    const response = await api.get('/tasks/calendar', { params: { month } });
+    return response.data;
+  },
+
+  async addNote(taskId, message) {
+    const response = await api.post(`/tasks/${taskId}/notes`, { message });
+    return response.data;
+  },
+
+  async getActivity(taskId) {
+    const response = await api.get(`/tasks/${taskId}/activity`);
+    return response.data;
   }
 };
 

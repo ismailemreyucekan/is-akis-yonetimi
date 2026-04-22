@@ -1,0 +1,15 @@
+{
+  "name": "is-akis-backend",
+  "version": "1.0.0",
+  "description": "Backend API for İş Akış Yönetim Sistemi",
+  "scripts": {
+    "start": "venv\\Scripts\\python.exe run.py",
+    "db:recreate": "venv\\Scripts\\python.exe recreate_db.py",
+    "db:init": "venv\\Scripts\\flask.exe db init",
+    "db:migrate": "venv\\Scripts\\flask.exe db migrate",
+    "db:upgrade": "venv\\Scripts\\flask.exe db upgrade",
+    "db:seed": "venv\\Scripts\\python.exe seed.py"
+  },
+  "author": "",
+  "license": "ISC"
+}

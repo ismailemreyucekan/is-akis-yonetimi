@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.notification import Notification
@@ -50,3 +50,19 @@ def mark_all_as_read():
     db.session.commit()
 
     return jsonify({'message': 'Tüm bildirimler okundu olarak işaretlendi.'}), 200
+
+
+@notifications_bp.route('/<int:notification_id>', methods=['DELETE'])
+@jwt_required()
+def delete_notification(notification_id):
+    """Bildirimi sil."""
+    user_id = get_jwt_identity()
+    notification = Notification.query.get_or_404(notification_id)
+
+    if notification.user_id != user_id:
+        return jsonify({'error': 'Yetkisiz erişim.'}), 403
+
+    db.session.delete(notification)
+    db.session.commit()
+
+    return jsonify({'message': 'Bildirim silindi.'}), 200

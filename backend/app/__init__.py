@@ -30,28 +30,20 @@ def create_app(config_name=None):
     from app.routes.tasks import tasks_bp
     from app.routes.workflows import workflows_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.projects import projects_bp
+    from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tasks_bp)
     app.register_blueprint(workflows_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(projects_bp)
+    app.register_blueprint(admin_bp)
 
-    # Veritabanı tablolarını oluştur
+    # Sadece modellerin Alembic tarafından görülmesi için import ediyoruz
     with app.app_context():
-        from app.models import User, Task, Workflow, WorkflowStep, WorkflowInstance, Notification
-        db.create_all()
-
-        # Varsayılan admin kullanıcısı oluştur (yoksa)
-        if not User.query.filter_by(username='admin').first():
-            admin = User(
-                username='admin',
-                email='admin@sistem.com',
-                full_name='Sistem Yöneticisi',
-                role='admin'
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
-            print('[OK] Varsayilan admin kullanicisi olusturuldu (admin / admin123)')
+        from app.models import (User, Task, Workflow, WorkflowStep,
+                                WorkflowInstance, Notification, Project,
+                                ProjectMember, ActivityLog)
 
     return app

@@ -2,13 +2,17 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from app import db
 from app.models.user import User
+from app.models.notification import Notification
+from app.utils import admin_required
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 
 @auth_bp.route('/register', methods=['POST'])
+@jwt_required()
+@admin_required
 def register():
-    """Yeni kullanıcı kaydı."""
+    """Yeni kullanıcı kaydı (sadece admin)."""
     data = request.get_json()
 
     # Zorunlu alan kontrolü
@@ -27,7 +31,9 @@ def register():
         username=data['username'],
         email=data['email'],
         full_name=data['full_name'],
-        role=data.get('role', 'user')
+        role=data.get('role', 'employee'),
+        department=data.get('department'),
+        position=data.get('position')
     )
     user.set_password(data['password'])
 
@@ -46,24 +52,32 @@ def login():
     data = request.get_json()
 
     if not data.get('username') or not data.get('password'):
-        return jsonify({'error': 'Kullanıcı adı ve şifre gereklidir.'}), 400
+        return jsonify({'error': 'Kullanıcı adı/e-posta ve şifre gereklidir.'}), 400
 
-    user = User.query.filter_by(username=data['username']).first()
+    login_id = data['username']
+    from sqlalchemy import or_
+    user = User.query.filter(or_(User.username == login_id, User.email == login_id)).first()
 
     if not user or not user.check_password(data['password']):
-        return jsonify({'error': 'Geçersiz kullanıcı adı veya şifre.'}), 401
+        return jsonify({'error': 'Geçersiz kullanıcı adı/e-posta veya şifre.'}), 401
 
     if not user.is_active:
         return jsonify({'error': 'Bu hesap devre dışı bırakılmış.'}), 403
 
-    access_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
+
+    # Okunmamış bildirim sayısı
+    unread_count = Notification.query.filter_by(
+        user_id=user.id, is_read=False
+    ).count()
 
     return jsonify({
         'message': 'Giriş başarılı.',
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'user': user.to_dict()
+        'user': user.to_dict(),
+        'unread_notifications': unread_count
     }), 200
 
 
