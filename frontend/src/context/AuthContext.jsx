@@ -1,17 +1,18 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    return authService.isAuthenticated() ? authService.getCurrentUser() : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sayfa yüklendiğinde mevcut kullanıcıyı kontrol et
-    const savedUser = authService.getCurrentUser();
-    if (savedUser && authService.isAuthenticated()) {
-      setUser(savedUser);
+    // Backend'den güncel bilgileri doğrula
+    if (user && authService.isAuthenticated()) {
       // Backend'den güncel bilgileri doğrula
       authService.getMe()
         .then(data => {

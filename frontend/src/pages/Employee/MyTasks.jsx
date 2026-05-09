@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
 import TaskDetailModal from '../../components/Tasks/TaskDetailModal';
+
+const COLUMNS = [
+  { id: 'todo', title: 'Yapılacak', color: 'var(--text-muted)' },
+  { id: 'in_progress', title: 'Devam Ediyor', color: 'var(--warning)' },
+  { id: 'review', title: 'İncelemede', color: 'var(--info)' },
+  { id: 'done', title: 'Tamamlandı', color: 'var(--success)' },
+];
 
 const STATUS_OPTIONS = [
   { value: 'todo', label: 'Yapılacak' },
@@ -22,8 +30,8 @@ const PRIORITY_LABELS = Object.fromEntries(PRIORITY_OPTIONS.map(p => [p.value, p
 const DAYS_TR = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
-export default function MyTasks({ defaultView = 'list' }) {
-  const [view, setView] = useState(defaultView); // list | calendar
+export default function MyTasks({ defaultView = 'board' }) {
+  const [view, setView] = useState(defaultView); // board | list | calendar
   const [tasks, setTasks] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,15 +46,15 @@ export default function MyTasks({ defaultView = 'list' }) {
   const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
-    if (view === 'list') loadListTasks();
+    if (view === 'list' || view === 'board') loadListTasks();
     else loadCalendarTasks();
   }, [view, filterStatus, filterPriority, calYear, calMonth]);
 
   async function loadListTasks() {
     try {
       setLoading(true);
-      const params = { per_page: 100 };
-      if (filterStatus) params.status = filterStatus;
+      const params = { per_page: 200 };
+      if (filterStatus && view !== 'board') params.status = filterStatus;
       if (filterPriority) params.priority = filterPriority;
       const data = await taskService.getTasks(params);
       setTasks(data.tasks);
@@ -73,11 +81,34 @@ export default function MyTasks({ defaultView = 'list' }) {
   async function handleStatusChange(taskId, newStatus) {
     try {
       await taskService.updateTask(taskId, { status: newStatus });
-      if (view === 'list') loadListTasks();
+      if (view === 'list' || view === 'board') loadListTasks();
       else loadCalendarTasks();
     } catch (err) {
       console.error(err);
     }
+  }
+
+  async function onDragEnd(result) {
+    if (!result.destination) return;
+    const { draggableId, destination } = result;
+    const newStatus = destination.droppableId;
+    const taskId = parseInt(draggableId);
+
+    // Optimistic update
+    setTasks(prev => prev.map(t =>
+      t.id === taskId ? { ...t, status: newStatus } : t
+    ));
+
+    try {
+      await taskService.updateTask(taskId, { status: newStatus });
+    } catch (err) {
+      console.error(err);
+      if (view === 'list' || view === 'board') loadListTasks(); // Revert
+    }
+  }
+
+  function getColumnTasks(status) {
+    return tasks.filter(t => t.status === status);
   }
 
   // Calendar helpers
@@ -128,17 +159,102 @@ export default function MyTasks({ defaultView = 'list' }) {
         <div className="page-content">
           <div className="page-header">
             <div>
-              <h1 className="page-title">Görevlerim</h1>
-              <p className="page-subtitle">Atanan görevlerinizi takip edin</p>
+              <h1 className="page-title">{defaultView === 'calendar' ? 'Takvim' : 'Görevlerim'}</h1>
+              <p className="page-subtitle">{defaultView === 'calendar' ? 'Görevlerinizi takvim üzerinde görüntüleyin' : 'Atanan görevlerinizi takip edin'}</p>
             </div>
-            <div className="view-toggle">
-              <button className={`view-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>📋 Liste</button>
-              <button className={`view-toggle-btn ${view === 'calendar' ? 'active' : ''}`} onClick={() => setView('calendar')}>📅 Takvim</button>
-            </div>
+            {defaultView !== 'calendar' && (
+              <div className="view-toggle">
+                <button className={`view-toggle-btn ${view === 'board' ? 'active' : ''}`} onClick={() => setView('board')}>📋 Pano</button>
+                <button className={`view-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>📄 Liste</button>
+              </div>
+            )}
           </div>
 
           {loading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
+          ) : view === 'board' ? (
+            /* ===== BOARD VIEW ===== */
+            <>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                <select className="form-select" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ maxWidth: 160 }}>
+                  <option value="">Tüm Öncelikler</option>
+                  {PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+              </div>
+
+              <DragDropContext onDragEnd={onDragEnd}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, minHeight: 400 }}>
+                  {COLUMNS.map(col => (
+                    <Droppable droppableId={col.id} key={col.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          style={{
+                            background: snapshot.isDraggingOver ? 'var(--accent-bg)' : 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-lg)',
+                            padding: 12,
+                            transition: 'background 150ms ease',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}
+                        >
+                          <div style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            marginBottom: 10, paddingBottom: 8, borderBottom: `2px solid ${col.color}`
+                          }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: col.color }}>{col.title}</span>
+                            <span style={{
+                              fontSize: '0.7rem', fontWeight: 600, background: 'var(--accent-bg)',
+                              padding: '2px 8px', borderRadius: 'var(--radius-full)', color: 'var(--text-secondary)'
+                            }}>{getColumnTasks(col.id).length}</span>
+                          </div>
+
+                          <div style={{ flex: 1, minHeight: 50 }}>
+                            {getColumnTasks(col.id).map((task, index) => (
+                              <Draggable key={task.id} draggableId={String(task.id)} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    onClick={() => setSelectedTask(task)}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      background: snapshot.isDragging ? 'var(--bg-card-hover)' : 'var(--bg-secondary)',
+                                      border: '1px solid var(--border-color)',
+                                      borderRadius: 'var(--radius-md)',
+                                      padding: '10px 12px',
+                                      marginBottom: 8,
+                                      boxShadow: snapshot.isDragging ? 'var(--shadow-md)' : 'none',
+                                      cursor: 'grab',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 6 }}>
+                                      {task.title}
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                                      <span className={`badge badge-${task.priority}`}>{PRIORITY_LABELS[task.priority]}</span>
+                                      {task.label && <span style={{ fontSize: '0.68rem', color: 'var(--accent)', background: 'var(--accent-bg)', padding: '1px 6px', borderRadius: 'var(--radius-full)' }}>{task.label}</span>}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                      <span>{task.project_name || ''}</span>
+                                      {task.due_date && <span>{new Date(task.due_date).toLocaleDateString('tr-TR')}</span>}
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        </div>
+                      )}
+                    </Droppable>
+                  ))}
+                </div>
+              </DragDropContext>
+            </>
           ) : view === 'list' ? (
             /* ===== LIST VIEW ===== */
             <>
@@ -306,7 +422,7 @@ export default function MyTasks({ defaultView = 'list' }) {
             <TaskDetailModal
               task={selectedTask}
               onClose={() => setSelectedTask(null)}
-              onUpdate={() => { setSelectedTask(null); view === 'list' ? loadListTasks() : loadCalendarTasks(); }}
+              onUpdate={() => { setSelectedTask(null); (view === 'list' || view === 'board') ? loadListTasks() : loadCalendarTasks(); }}
             />
           )}
         </div>

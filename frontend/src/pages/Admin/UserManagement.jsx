@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import adminService from '../../services/adminService';
+import api from '../../services/api';
 
 const ROLES = [
   { value: 'admin', label: 'Admin' },
@@ -55,7 +56,6 @@ export default function UserManagement() {
         if (!data.password) delete data.password;
         await adminService.updateUser(editUser.id, data);
       } else {
-        const api = (await import('../../services/api')).default;
         await api.post('/auth/register', form);
       }
       setShowModal(false);

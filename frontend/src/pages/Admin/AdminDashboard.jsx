@@ -8,8 +8,6 @@ export default function AdminDashboard() {
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadData(); }, []);
-
   async function loadData() {
     try {
       const [statsData, actData] = await Promise.all([
@@ -24,6 +22,8 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => { loadData(); }, []);
 
   const statCards = stats ? [
     { icon: '👥', label: 'Kullanıcılar', value: stats.total_users, color: 'var(--accent)' },

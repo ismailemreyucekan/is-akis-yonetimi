@@ -13,12 +13,6 @@ export default function Navbar({ title }) {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
@@ -27,16 +21,21 @@ export default function Navbar({ title }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
   async function loadNotifications() {
     try {
       const data = await notificationService.getNotifications();
       setNotifications(data.notifications);
       setUnreadCount(data.unread_count);
-    } catch (err) {
+    } catch {
       // Sessiz hata
     }
   }
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleMarkAllRead() {
     try {

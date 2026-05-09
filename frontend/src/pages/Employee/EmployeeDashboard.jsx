@@ -10,8 +10,6 @@ export default function EmployeeDashboard() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadData(); }, []);
-
   async function loadData() {
     try {
       const [statsData, tasksData, notifData] = await Promise.all([
@@ -28,6 +26,8 @@ export default function EmployeeDashboard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => { loadData(); }, []);
 
   const statusLabels = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', review: 'İncelemede', done: 'Tamamlandı' };
 

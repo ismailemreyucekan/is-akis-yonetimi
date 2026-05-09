@@ -10,14 +10,12 @@ export default function ManagerDashboard() {
   const [recentTasks, setRecentTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadData(); }, []);
-
   async function loadData() {
     try {
       const [statsData, projData, tasksData] = await Promise.all([
         taskService.getStats(),
         projectService.getProjects(),
-        taskService.getTasks({ per_page: 8 })
+        taskService.getTasks({ per_page: 5 })
       ]);
       setStats(statsData.stats);
       setProjects(projData.projects);
@@ -28,6 +26,8 @@ export default function ManagerDashboard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => { loadData(); }, []);
 
   const statusLabels = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', review: 'İncelemede', done: 'Tamamlandı' };
   const priorityLabels = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', urgent: 'Acil' };
