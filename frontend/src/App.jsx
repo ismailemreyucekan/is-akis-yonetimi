@@ -24,14 +24,6 @@ function RoleRoute({ children, allowedRoles }) {
   return children;
 }
 
-// Protected route (any authenticated user)
-function PrivateRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  return children;
-}
-
 // Login redirect (already logged in → go to dashboard)
 function LoginRoute() {
   const { isAuthenticated, user, loading } = useAuth();
@@ -71,13 +63,13 @@ export default function App() {
           <Route path="/manager/projects" element={<RoleRoute allowedRoles={['manager']}><ProjectManagement /></RoleRoute>} />
           <Route path="/manager/board" element={<RoleRoute allowedRoles={['manager']}><TeamBoard /></RoleRoute>} />
           <Route path="/manager/workflows" element={<RoleRoute allowedRoles={['manager']}><ManagerDashboard /></RoleRoute>} />
-          <Route path="/manager/tasks" element={<RoleRoute allowedRoles={['manager']}><MyTasks /></RoleRoute>} />
-          <Route path="/manager/calendar" element={<RoleRoute allowedRoles={['manager']}><MyTasks defaultView="calendar" /></RoleRoute>} />
+          <Route path="/manager/tasks" element={<RoleRoute allowedRoles={['manager']}><MyTasks key="manager-tasks" /></RoleRoute>} />
+          <Route path="/manager/calendar" element={<RoleRoute allowedRoles={['manager']}><MyTasks key="manager-calendar" defaultView="calendar" /></RoleRoute>} />
 
           {/* Employee Routes */}
           <Route path="/app" element={<RoleRoute allowedRoles={['employee']}><EmployeeDashboard /></RoleRoute>} />
-          <Route path="/app/tasks" element={<RoleRoute allowedRoles={['employee']}><MyTasks /></RoleRoute>} />
-          <Route path="/app/calendar" element={<RoleRoute allowedRoles={['employee']}><MyTasks defaultView="calendar" /></RoleRoute>} />
+          <Route path="/app/tasks" element={<RoleRoute allowedRoles={['employee']}><MyTasks key="employee-tasks" /></RoleRoute>} />
+          <Route path="/app/calendar" element={<RoleRoute allowedRoles={['employee']}><MyTasks key="employee-calendar" defaultView="calendar" /></RoleRoute>} />
 
           {/* Root redirect */}
           <Route path="/" element={<RootRedirect />} />

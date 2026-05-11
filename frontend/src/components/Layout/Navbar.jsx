@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import notificationService from '../../services/notificationService';
@@ -7,6 +8,7 @@ import './Navbar.css';
 export default function Navbar({ title }) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -21,6 +23,7 @@ export default function Navbar({ title }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
   async function loadNotifications() {
     try {
       const data = await notificationService.getNotifications();
@@ -37,25 +40,38 @@ export default function Navbar({ title }) {
     return () => clearInterval(interval);
   }, []);
 
-  async function handleMarkAllRead() {
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Bildirimler işaretlenemedi:', err);
+  // Bildirim paneli açıldığında tüm okunmamışları okundu yap
+  async function handleToggleNotifications() {
+    const willOpen = !showNotifications;
+    setShowNotifications(willOpen);
+
+    if (willOpen && unreadCount > 0) {
+      try {
+        await notificationService.markAllAsRead();
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        setUnreadCount(0);
+      } catch {
+        // Sessiz hata
+      }
     }
   }
 
-  async function handleMarkRead(id) {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Bildirim okunamadı:', err);
+  // Bildirime tıklandığında ilgili sayfaya yönlendir
+  function handleNotificationClick(notification) {
+    setShowNotifications(false);
+
+    const role = user?.role || 'employee';
+    const prefix = role === 'admin' ? '/admin' : role === 'manager' ? '/manager' : '/app';
+
+    if (notification.related_task_id) {
+      navigate(`${prefix}/tasks`);
+    } else if (notification.related_project_id) {
+      navigate(`${prefix}/projects`);
+    } else if (notification.related_workflow_id) {
+      navigate(role === 'employee' ? '/app' : `${prefix}/workflows`);
+    } else {
+      // Genel bildirimler için dashboard'a git
+      navigate(prefix);
     }
   }
 
@@ -90,7 +106,7 @@ export default function Navbar({ title }) {
         <div className="notification-wrapper" ref={dropdownRef}>
           <button
             className="notification-btn"
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={handleToggleNotifications}
           >
             🔔
             {unreadCount > 0 && (
@@ -102,11 +118,6 @@ export default function Navbar({ title }) {
             <div className="notification-dropdown">
               <div className="notification-header">
                 <span className="notification-header-title">Bildirimler</span>
-                {unreadCount > 0 && (
-                  <button className="notification-read-all" onClick={handleMarkAllRead}>
-                    Tümünü Oku
-                  </button>
-                )}
               </div>
               <div className="notification-list">
                 {notifications.length === 0 ? (
@@ -118,8 +129,9 @@ export default function Navbar({ title }) {
                   notifications.slice(0, 15).map((n) => (
                     <div
                       key={n.id}
-                      className={`notification-item ${!n.is_read ? 'notification-unread' : ''}`}
-                      onClick={() => !n.is_read && handleMarkRead(n.id)}
+                      className="notification-item"
+                      onClick={() => handleNotificationClick(n)}
+                      style={{ cursor: 'pointer' }}
                     >
                       <span className="notification-item-icon">{getIcon(n.type)}</span>
                       <div className="notification-item-content">
@@ -127,7 +139,6 @@ export default function Navbar({ title }) {
                         <span className="notification-item-msg">{n.message}</span>
                         <span className="notification-item-time">{formatTimeAgo(n.created_at)}</span>
                       </div>
-                      {!n.is_read && <span className="notification-dot"></span>}
                     </div>
                   ))
                 )}

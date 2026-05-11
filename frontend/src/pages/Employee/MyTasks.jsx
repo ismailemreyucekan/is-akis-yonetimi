@@ -34,6 +34,11 @@ export default function MyTasks({ defaultView = 'board' }) {
   const [view, setView] = useState(defaultView); // board | list | calendar
   const [tasks, setTasks] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
+
+  // Sync view when navigating between routes (defaultView prop changes)
+  useEffect(() => {
+    setView(defaultView);
+  }, [defaultView]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
