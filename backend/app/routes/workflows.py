@@ -132,12 +132,16 @@ def start_workflow(workflow_id):
     ).first()
 
     if first_step:
+        from app.models.user import User
+        assignee_id = data.get('assigned_to')
+        assignees = User.query.filter_by(id=assignee_id).all() if assignee_id else []
+        
         task = Task(
             title=f'{workflow.name} - {first_step.name}',
             description=first_step.description or f'{workflow.name} iş akışının ilk adımı.',
             status='todo',
             priority='medium',
-            assigned_to=data.get('assigned_to'),
+            assignees=assignees,
             created_by=user.id,
             workflow_instance_id=instance.id
         )
@@ -211,12 +215,16 @@ def advance_workflow(instance_id):
 
     if next_step:
         data = request.get_json() or {}
+        from app.models.user import User
+        assignee_id = data.get('assigned_to', instance.assigned_to)
+        assignees = User.query.filter_by(id=assignee_id).all() if assignee_id else []
+
         task = Task(
             title=f'{instance.workflow.name} - {next_step.name}',
             description=next_step.description or '',
             status='todo',
             priority='medium',
-            assigned_to=data.get('assigned_to', instance.assigned_to),
+            assignees=assignees,
             created_by=user.id,
             workflow_instance_id=instance.id
         )

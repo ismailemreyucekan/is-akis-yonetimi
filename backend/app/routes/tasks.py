@@ -31,11 +31,11 @@ def get_tasks():
     elif user.role == 'manager':
         # Manager: oluşturduğu + atandığı görevler
         query = query.filter(
-            (Task.assigned_to == user.id) | (Task.created_by == user.id)
+            Task.assignees.any(id=user.id) | (Task.created_by == user.id)
         )
     else:
         # Employee: sadece atandığı görevler
-        query = query.filter(Task.assigned_to == user.id)
+        query = query.filter(Task.assignees.any(id=user.id))
 
     # Filtreler
     if status:
@@ -43,7 +43,7 @@ def get_tasks():
     if priority:
         query = query.filter(Task.priority == priority)
     if assigned_to:
-        query = query.filter(Task.assigned_to == assigned_to)
+        query = query.filter(Task.assignees.any(id=assigned_to))
     if project_id:
         query = query.filter(Task.project_id == project_id)
 
@@ -62,23 +62,32 @@ def get_tasks():
 @jwt_required()
 def create_task():
     """Yeni görev oluştur."""
+    import json as json_module
     user = get_current_user()
     data = request.get_json()
 
     if not data.get('title'):
         return jsonify({'error': 'Görev başlığı zorunludur.'}), 400
 
+    from app.models.user import User
+    assignee_ids = data.get('assignees', [])
+    assignees = User.query.filter(User.id.in_(assignee_ids)).all() if assignee_ids else []
+
     task = Task(
         title=data['title'],
         description=data.get('description', ''),
         status=data.get('status', 'todo'),
         priority=data.get('priority', 'medium'),
+        start_date=datetime.fromisoformat(data['start_date']) if data.get('start_date') else None,
         due_date=datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
         label=data.get('label'),
         estimated_hours=data.get('estimated_hours'),
-        assigned_to=data.get('assigned_to'),
+        assignees=assignees,
         created_by=user.id,
-        project_id=data.get('project_id')
+        project_id=data.get('project_id'),
+        is_recurring=data.get('is_recurring', False),
+        recurrence_rule=json_module.dumps(data['recurrence_rule']) if data.get('recurrence_rule') else None,
+        recurrence_end_date=datetime.fromisoformat(data['recurrence_end_date']) if data.get('recurrence_end_date') else None
     )
 
     db.session.add(task)
@@ -87,18 +96,27 @@ def create_task():
     # Aktivite logu
     create_activity_log(task, user, 'created', message=f'Görev oluşturuldu: {task.title}')
 
-    # Atanan kişiye bildirim gönder
-    if task.assigned_to and task.assigned_to != user.id:
-        create_notification(
-            user_id=task.assigned_to,
-            title='Yeni Görev Atandı',
-            message=f'"{task.title}" görevi size atandı.',
-            notif_type='task_assigned',
-            task_id=task.id,
-            project_id=task.project_id
-        )
+    # Atanan kişilere bildirim gönder
+    for assignee in task.assignees:
+        if assignee.id != user.id:
+            create_notification(
+                user_id=assignee.id,
+                title='Yeni Görev Atandı',
+                message=f'"{task.title}" görevi size atandı.',
+                notif_type='task_assigned',
+                task_id=task.id,
+                project_id=task.project_id
+            )
 
     db.session.commit()
+
+    # Tekrarlanan görev ise ilk batch'i oluştur
+    if task.is_recurring and task.recurrence_rule:
+        try:
+            from app.utils.recurrence_engine import generate_recurring_task_instances
+            generate_recurring_task_instances(task, window_days=30)
+        except Exception as e:
+            print(f'Tekrarlanan görev oluşturma hatası: {e}')
 
     return jsonify({
         'message': 'Görev başarıyla oluşturuldu.',
@@ -126,9 +144,9 @@ def update_task(task_id):
     data = request.get_json()
 
     # Yetki kontrolü
-    if user.role == 'employee' and task.assigned_to != user.id:
+    if user.role == 'employee' and user not in task.assignees:
         return jsonify({'error': 'Bu görevi düzenleme yetkiniz yok.'}), 403
-    if user.role == 'manager' and task.created_by != user.id and task.assigned_to != user.id:
+    if user.role == 'manager' and task.created_by != user.id and user not in task.assignees:
         return jsonify({'error': 'Bu görevi düzenleme yetkiniz yok.'}), 403
 
     if 'title' in data:
@@ -142,8 +160,12 @@ def update_task(task_id):
             create_activity_log(task, user, 'status_changed',
                                 old_value=old_status, new_value=data['status'])
             # Bildirim: durum değişikliği
-            notify_user_id = task.created_by if task.assigned_to == user.id else task.assigned_to
-            if notify_user_id and notify_user_id != user.id:
+            notify_ids = {u.id for u in task.assignees}
+            if task.created_by:
+                notify_ids.add(task.created_by)
+            notify_ids.discard(user.id)
+            
+            for notify_user_id in notify_ids:
                 status_labels = {
                     'todo': 'Yapılacak', 'in_progress': 'Devam Ediyor',
                     'review': 'İncelemede', 'done': 'Tamamlandı'
@@ -161,26 +183,36 @@ def update_task(task_id):
         if old_priority != data['priority']:
             create_activity_log(task, user, 'priority_changed',
                                 old_value=old_priority, new_value=data['priority'])
+    if 'start_date' in data:
+        task.start_date = datetime.fromisoformat(data['start_date']) if data['start_date'] else None
     if 'due_date' in data:
         task.due_date = datetime.fromisoformat(data['due_date']) if data['due_date'] else None
     if 'label' in data:
         task.label = data['label']
     if 'estimated_hours' in data:
         task.estimated_hours = data['estimated_hours']
-    if 'assigned_to' in data:
-        old_assignee = task.assigned_to
-        task.assigned_to = data['assigned_to']
-        if data['assigned_to'] and data['assigned_to'] != old_assignee:
+    if 'assignees' in data:
+        from app.models.user import User
+        new_assignee_ids = data['assignees']
+        old_assignee_ids = {u.id for u in task.assignees}
+        
+        new_assignees = User.query.filter(User.id.in_(new_assignee_ids)).all() if new_assignee_ids else []
+        task.assignees = new_assignees
+        
+        added_assignees = [u for u in new_assignees if u.id not in old_assignee_ids]
+        
+        if added_assignees:
             create_activity_log(task, user, 'assigned',
-                                new_value=str(data['assigned_to']))
-            if data['assigned_to'] != user.id:
-                create_notification(
-                    user_id=data['assigned_to'],
-                    title='Görev Atandı',
-                    message=f'"{task.title}" görevi size atandı.',
-                    notif_type='task_assigned',
-                    task_id=task.id
-                )
+                                new_value=', '.join([u.full_name for u in added_assignees]))
+            for assignee in added_assignees:
+                if assignee.id != user.id:
+                    create_notification(
+                        user_id=assignee.id,
+                        title='Görev Atandı',
+                        message=f'"{task.title}" görevi size atandı.',
+                        notif_type='task_assigned',
+                        task_id=task.id
+                    )
     if 'project_id' in data:
         task.project_id = data['project_id']
 
@@ -225,10 +257,10 @@ def get_task_stats():
         base_query = Task.query
     elif user.role == 'manager':
         base_query = Task.query.filter(
-            (Task.assigned_to == user.id) | (Task.created_by == user.id)
+            Task.assignees.any(id=user.id) | (Task.created_by == user.id)
         )
     else:
-        base_query = Task.query.filter(Task.assigned_to == user.id)
+        base_query = Task.query.filter(Task.assignees.any(id=user.id))
 
     total = base_query.count()
     todo = base_query.filter(Task.status == 'todo').count()
@@ -284,10 +316,10 @@ def get_calendar_tasks():
         pass
     elif user.role == 'manager':
         query = query.filter(
-            (Task.assigned_to == user.id) | (Task.created_by == user.id)
+            Task.assignees.any(id=user.id) | (Task.created_by == user.id)
         )
     else:
-        query = query.filter(Task.assigned_to == user.id)
+        query = query.filter(Task.assignees.any(id=user.id))
 
     tasks = query.order_by(Task.due_date.asc()).all()
 
@@ -312,9 +344,10 @@ def add_task_note(task_id):
     log = create_activity_log(task, user, 'note', message=message)
 
     # Not eklenince ilgili kişilere bildirim
-    notify_ids = set()
-    if task.assigned_to and task.assigned_to != user.id:
-        notify_ids.add(task.assigned_to)
+    notify_ids = {u.id for u in task.assignees}
+    if task.created_by:
+        notify_ids.add(task.created_by)
+    notify_ids.discard(user.id)
     if task.created_by and task.created_by != user.id:
         notify_ids.add(task.created_by)
 
@@ -346,4 +379,54 @@ def get_task_activity(task_id):
 
     return jsonify({
         'activity': [log.to_dict() for log in logs]
+    }), 200
+
+
+# ========================
+# TEKRARLANAN GÖREV
+# ========================
+
+@tasks_bp.route('/generate-recurring', methods=['POST'])
+@jwt_required()
+def generate_recurring():
+    """Tekrarlanan görev örneklerini oluştur."""
+    from app.utils.recurrence_engine import generate_recurring_task_instances
+
+    user = get_current_user()
+    data = request.get_json() or {}
+    window_days = data.get('window_days', 30)
+
+    recurring_tasks = Task.query.filter_by(is_recurring=True).all()
+    total_created = 0
+
+    for task in recurring_tasks:
+        # Yetki kontrolü
+        if user.role == 'employee' and user not in task.assignees:
+            continue
+        instances = generate_recurring_task_instances(task, window_days=window_days)
+        total_created += len(instances)
+
+    return jsonify({
+        'message': f'{total_created} tekrarlanan görev örneği oluşturuldu.',
+        'created_count': total_created
+    }), 200
+
+
+@tasks_bp.route('/<int:task_id>/recurring-instances', methods=['GET'])
+@jwt_required()
+def get_recurring_instances(task_id):
+    """Tekrarlanan görevin örneklerini listele."""
+    task = Task.query.get_or_404(task_id)
+
+    if not task.is_recurring:
+        return jsonify({'error': 'Bu görev tekrarlanan bir görev değil.'}), 400
+
+    instances = Task.query.filter_by(recurrence_parent_id=task_id)\
+        .order_by(Task.due_date.asc())\
+        .all()
+
+    return jsonify({
+        'parent': task.to_dict(),
+        'instances': [i.to_dict() for i in instances],
+        'total': len(instances)
     }), 200

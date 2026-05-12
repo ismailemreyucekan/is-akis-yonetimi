@@ -32,6 +32,8 @@ def create_app(config_name=None):
     from app.routes.notifications import notifications_bp
     from app.routes.projects import projects_bp
     from app.routes.admin import admin_bp
+    from app.routes.meetings import meetings_bp
+    from app.routes.risks import risks_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tasks_bp)
@@ -39,11 +41,14 @@ def create_app(config_name=None):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(meetings_bp)
+    app.register_blueprint(risks_bp)
 
     # Sadece modellerin Alembic tarafından görülmesi için import ediyoruz
     with app.app_context():
         from app.models import (User, Task, Workflow, WorkflowStep,
                                 WorkflowInstance, Notification, Project,
-                                ProjectMember, ActivityLog)
+                                ProjectMember, ActivityLog, ReminderConfig,
+                                Meeting, MeetingParticipant, Risk)
 
     return app

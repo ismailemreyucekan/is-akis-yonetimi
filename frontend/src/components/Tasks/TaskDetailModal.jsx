@@ -105,7 +105,16 @@ export default function TaskDetailModal({ task, onClose, onUpdate }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Atanan</div>
-                <span style={{ fontSize: '0.85rem' }}>{task.assignee_name || '—'}</span>
+                <span style={{ fontSize: '0.85rem' }}>{task.assignees?.length > 0 ? task.assignees.map(a => a.full_name).join(', ') : '—'}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Başlangıç Tarihi</div>
+                <span style={{ fontSize: '0.85rem' }}>
+                  {task.start_date ? new Date(task.start_date).toLocaleDateString('tr-TR') : '—'}
+                </span>
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Bitiş Tarihi</div>

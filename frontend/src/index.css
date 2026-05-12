@@ -701,16 +701,299 @@ a {
 }
 
 /* ========================
-   RESPONSIVE
+   RESPONSIVE GRID UTILS
    ======================== */
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.grid-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.grid-4-col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
 @media (max-width: 768px) {
-  .main-content { margin-left: 0; }
-  .page-content { padding: 14px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .form-row { grid-template-columns: 1fr; }
-  .page-header { flex-direction: column; align-items: flex-start; }
+  .grid-2-col,
+  .grid-2-1 {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
+  .grid-3-col,
+  .grid-4-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
+/* Kanban & Calendar horizontal scroll containers */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(280px, 1fr));
+  gap: 12px;
+  min-height: 400px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ========================
+   RESPONSIVE — TABLET (768px)
+   ======================== */
+@media (max-width: 768px) {
+  html { font-size: 14px; }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .page-content {
+    padding: 14px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .page-title { font-size: 1.2rem; }
+  .page-subtitle { font-size: 0.8rem; }
+
+  /* Stats grid → 2 kolona */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card { padding: 12px; gap: 10px; }
+  .stat-value { font-size: 1.15rem; }
+  .stat-icon { width: 34px; height: 34px; font-size: 1rem; }
+
+  /* Formlar tek kolona */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tablolar scroll */
+  .data-table-wrapper,
+  .card-body:has(.data-table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  .data-table thead th { padding: 8px 10px; font-size: 0.68rem; }
+  .data-table tbody td { padding: 10px; font-size: 0.8rem; }
+
+  /* Modal tam ekran */
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 16px;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+  }
+
+  .modal-header { margin-bottom: 14px; }
+  .modal-title { font-size: 1rem; }
+
+  /* View toggle scroll */
+  .view-toggle {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .view-toggle-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  /* Card body padding */
+  .card-body { padding: 14px; }
+
+  /* Toast mobil */
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 16px;
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: 100%;
+  }
+
+  /* Dashboard inline grid layouts (tüm sayfalar) */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 2fr 1fr"],
+  [style*="grid-template-columns: 1fr 2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Dashboard inline flex gap */
+  [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Butonlar */
+  .btn { padding: 8px 14px; font-size: 0.82rem; }
+  .btn-sm { padding: 6px 10px; font-size: 0.78rem; }
+  .btn-lg { padding: 10px 20px; font-size: 0.88rem; }
+
+  /* Boş durum */
+  .empty-state { padding: 30px 16px; }
+  .empty-state-icon { font-size: 2rem; }
+}
+
+/* ========================
+   RESPONSIVE — PHONE (480px)
+   ======================== */
+@media (max-width: 480px) {
+  html { font-size: 13.5px; }
+
+  .page-content {
+    padding: 10px;
+  }
+
+  .page-header {
+    margin-bottom: 14px;
+  }
+
+  .page-title { font-size: 1.1rem; }
+
+  /* Stats grid → tek kolon */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .stat-value { font-size: 1.1rem; }
+
+  /* Modal */
+  .modal-content {
+    padding: 12px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tablo hücreleri */
+  .data-table thead th { padding: 6px 8px; font-size: 0.65rem; }
+  .data-table tbody td { padding: 8px; font-size: 0.78rem; }
+
+  /* Badge küçüt */
+  .badge { font-size: 0.62rem; padding: 2px 6px; }
+
+  /* Inline grid'ler tek kolon */
+  [style*="repeat(3, 1fr)"],
+  [style*="repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ========================
+   RESPONSIVE — SMALL PHONE (360px)
+   ======================== */
+@media (max-width: 360px) {
+  html { font-size: 13px; }
+
+  .page-content { padding: 8px; }
+  .card-body { padding: 10px; }
+  .stat-card { padding: 8px 10px; }
+  .stat-icon { width: 30px; height: 30px; font-size: 0.9rem; }
+  .stat-value { font-size: 1rem; }
+}
+
+/* ========================
+   TOUCH-FRIENDLY
+   ======================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Daha büyük dokunma alanları */
+  .sidebar-link { padding: 10px 12px; }
+  .btn { min-height: 40px; }
+  .btn-icon { width: 36px; height: 36px; }
+  .form-input, .form-select, .form-textarea {
+    padding: 11px 12px;
+    font-size: 1rem;
+  }
+  /* iOS zoom engelle */
+  .form-input, .form-select, .form-textarea {
+    font-size: max(16px, 1em);
+  }
+  /* Bildirim sil butonu her zaman görünsün */
+  .notification-item-delete { opacity: 0.7; }
+}
+
+/* ========================
+   LANDSCAPE MOBİL
+   ======================== */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-content {
+    min-height: auto;
+    max-height: 100vh;
+  }
+}
+
+/* ========================
+   VIEWPORT META (PWA/safe-area)
+   ======================== */
+@supports (padding: env(safe-area-inset-top)) {
+  .navbar {
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--navbar-height) + env(safe-area-inset-top));
+  }
+  .sidebar {
+    padding-top: env(safe-area-inset-top);
+  }
+  .main-content {
+    padding-top: calc(var(--navbar-height) + env(safe-area-inset-top));
+  }
+}
+

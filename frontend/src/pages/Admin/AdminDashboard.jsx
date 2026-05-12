@@ -2,20 +2,28 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import adminService from '../../services/adminService';
+import meetingService from '../../services/meetingService';
+import riskService from '../../services/riskService';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
+  const [meetingStats, setMeetingStats] = useState(null);
+  const [riskStats, setRiskStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   async function loadData() {
     try {
-      const [statsData, actData] = await Promise.all([
+      const [statsData, actData, mStats, rStats] = await Promise.all([
         adminService.getStats(),
-        adminService.getActivity(15)
+        adminService.getActivity(15),
+        meetingService.getStats().catch(() => ({ stats: null })),
+        riskService.getStats().catch(() => ({ stats: null }))
       ]);
       setStats(statsData.stats);
       setActivity(actData.activity);
+      setMeetingStats(mStats.stats);
+      setRiskStats(rStats.stats);
     } catch (err) {
       console.error('Dashboard yüklenemedi:', err);
     } finally {
@@ -42,7 +50,7 @@ export default function AdminDashboard() {
     <div className="app-layout">
       <Sidebar />
       <div className="main-content">
-        <Navbar title="Admin Dashboard" />
+        <Navbar title="Dashboard" />
         <div className="page-content">
           {loading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
@@ -67,6 +75,56 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Operations Row */}
+              <div className="grid-2-col" style={{ marginBottom: 20 }}>
+                {/* Meeting Widget */}
+                <div className="card">
+                  <div className="card-body">
+                    <h3 className="section-title" style={{ marginBottom: 12 }}>📅 Toplantı Özeti</h3>
+                    {meetingStats ? (
+                      <div className="grid-3-col">
+                        {[
+                          { label: 'Yaklaşan', value: meetingStats.upcoming, color: 'var(--info)' },
+                          { label: 'Tamamlanan', value: meetingStats.completed, color: 'var(--success)' },
+                          { label: 'Toplam', value: meetingStats.total, color: 'var(--accent)' },
+                        ].map((item, i) => (
+                          <div key={i} style={{ textAlign: 'center', padding: '10px 0' }}>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: item.color }}>{item.value}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Veri yok</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Risk Widget */}
+                <div className="card">
+                  <div className="card-body">
+                    <h3 className="section-title" style={{ marginBottom: 12 }}>🛡️ Risk & Sorun Özeti</h3>
+                    {riskStats ? (
+                      <div className="grid-4-col">
+                        {[
+                          { label: 'Kritik', value: riskStats.critical, color: 'var(--danger)' },
+                          { label: 'Yüksek', value: riskStats.high, color: '#f97316' },
+                          { label: 'Açık', value: riskStats.open, color: 'var(--warning)' },
+                          { label: 'Geciken', value: riskStats.overdue, color: 'var(--danger)' },
+                        ].map((item, i) => (
+                          <div key={i} style={{ textAlign: 'center', padding: '10px 0' }}>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: item.color }}>{item.value}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Veri yok</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {stats?.roles && (

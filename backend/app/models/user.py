@@ -21,8 +21,6 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # İlişkiler
-    assigned_tasks = db.relationship('Task', backref='assignee', lazy='dynamic',
-                                     foreign_keys='Task.assigned_to')
     created_tasks = db.relationship('Task', backref='creator', lazy='dynamic',
                                     foreign_keys='Task.created_by')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')

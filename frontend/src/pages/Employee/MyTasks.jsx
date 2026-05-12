@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
+import projectService from '../../services/projectService';
 import TaskDetailModal from '../../components/Tasks/TaskDetailModal';
 
 const COLUMNS = [
@@ -34,6 +35,7 @@ export default function MyTasks({ defaultView = 'board' }) {
   const [view, setView] = useState(defaultView); // board | list | calendar
   const [tasks, setTasks] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
+  const [calendarProjects, setCalendarProjects] = useState([]);
 
   // Sync view when navigating between routes (defaultView prop changes)
   useEffect(() => {
@@ -74,8 +76,12 @@ export default function MyTasks({ defaultView = 'board' }) {
     try {
       setLoading(true);
       const month = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
-      const data = await taskService.getCalendarTasks(month);
-      setCalendarTasks(data.tasks);
+      const [taskData, projectData] = await Promise.all([
+        taskService.getCalendarTasks(month),
+        projectService.getProjects()
+      ]);
+      setCalendarTasks(taskData.tasks);
+      setCalendarProjects(projectData.projects);
     } catch (err) {
       console.error(err);
     } finally {
@@ -133,10 +139,40 @@ export default function MyTasks({ defaultView = 'board' }) {
 
   function getTasksForDay(day) {
     if (!day) return [];
+    const currentDate = new Date(calYear, calMonth, day);
+    currentDate.setHours(12, 0, 0, 0);
+
     return calendarTasks.filter(t => {
-      const d = new Date(t.due_date);
-      return d.getDate() === day && d.getMonth() === calMonth && d.getFullYear() === calYear;
-    });
+      const startStr = t.start_date || t.created_at;
+      if (!startStr) return false;
+      
+      const start = new Date(startStr);
+      start.setHours(0, 0, 0, 0);
+      
+      let end = new Date(start);
+      if (t.due_date) {
+        end = new Date(t.due_date);
+      }
+      end.setHours(23, 59, 59, 999);
+
+      return currentDate >= start && currentDate <= end;
+    }).sort((a, b) => a.id - b.id);
+  }
+
+  function getProjectsForDay(day) {
+    if (!day) return [];
+    const currentDate = new Date(calYear, calMonth, day);
+    currentDate.setHours(12, 0, 0, 0); // safe middle of day
+    
+    return calendarProjects.filter(p => {
+      if (!p.start_date || !p.end_date) return false;
+      const start = new Date(p.start_date);
+      const end = new Date(p.end_date);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      
+      return currentDate >= start && currentDate <= end;
+    }).sort((a, b) => a.id - b.id);
   }
 
   function prevMonth() {
@@ -165,7 +201,7 @@ export default function MyTasks({ defaultView = 'board' }) {
           <div className="page-header">
             <div>
               <h1 className="page-title">{defaultView === 'calendar' ? 'Takvim' : 'Görevlerim'}</h1>
-              <p className="page-subtitle">{defaultView === 'calendar' ? 'Görevlerinizi takvim üzerinde görüntüleyin' : 'Atanan görevlerinizi takip edin'}</p>
+              <p className="page-subtitle">{defaultView === 'calendar' ? 'Görevlerinizi ve projelerinizi takvim üzerinde görüntüleyin' : 'Atanan görevlerinizi takip edin'}</p>
             </div>
             {defaultView !== 'calendar' && (
               <div className="view-toggle">
@@ -188,7 +224,7 @@ export default function MyTasks({ defaultView = 'board' }) {
               </div>
 
               <DragDropContext onDragEnd={onDragEnd}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, minHeight: 400 }}>
+                <div className="kanban-board">
                   {COLUMNS.map(col => (
                     <Droppable droppableId={col.id} key={col.id}>
                       {(provided, snapshot) => (
@@ -324,10 +360,7 @@ export default function MyTasks({ defaultView = 'board' }) {
               </div>
 
               <div className="card" style={{ overflow: 'hidden' }}>
-                <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
-                  borderBottom: '1px solid var(--border-color)'
-                }}>
+                <div className="calendar-grid" style={{ borderBottom: '1px solid var(--border-color)' }}>
                   {DAYS_TR.map(d => (
                     <div key={d} style={{
                       padding: '8px', textAlign: 'center', fontSize: '0.72rem',
@@ -336,21 +369,25 @@ export default function MyTasks({ defaultView = 'board' }) {
                   ))}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+                <div className="calendar-grid">
                   {getCalendarDays().map((day, i) => {
                     const dayTasks = getTasksForDay(day);
+                    const dayProjects = getProjectsForDay(day);
                     const isSelected = day === selectedDay;
+                    
                     return (
                       <div
                         key={i}
                         onClick={() => day && setSelectedDay(day === selectedDay ? null : day)}
                         style={{
-                          minHeight: 80, padding: '4px 6px',
+                          minHeight: 100, padding: '4px 0',
                           borderRight: '1px solid var(--border-light)',
                           borderBottom: '1px solid var(--border-light)',
                           cursor: day ? 'pointer' : 'default',
                           background: isSelected ? 'var(--accent-bg)' : day ? 'transparent' : 'var(--bg-input)',
                           transition: 'background 100ms',
+                          display: 'flex',
+                          flexDirection: 'column'
                         }}
                       >
                         {day && (
@@ -358,26 +395,102 @@ export default function MyTasks({ defaultView = 'board' }) {
                             <div style={{
                               fontSize: '0.78rem', fontWeight: isToday(day) ? 700 : 400,
                               color: isToday(day) ? 'var(--accent)' : 'var(--text-primary)',
-                              marginBottom: 4,
+                              marginBottom: 4, marginLeft: 6,
                               width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
                               borderRadius: '50%',
                               background: isToday(day) ? 'var(--accent-bg)' : 'transparent',
                             }}>{day}</div>
-                            {dayTasks.slice(0, 3).map(t => (
-                              <div key={t.id} style={{
-                                fontSize: '0.65rem', padding: '1px 4px', borderRadius: 3, marginBottom: 2,
-                                background: t.priority === 'urgent' ? 'var(--danger-bg)' :
-                                            t.priority === 'high' ? 'rgba(249,115,22,0.12)' :
-                                            'var(--accent-bg)',
-                                color: t.priority === 'urgent' ? 'var(--danger)' :
-                                       t.priority === 'high' ? '#f97316' :
-                                       'var(--accent)',
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                              }}>{t.title}</div>
-                            ))}
-                            {dayTasks.length > 3 && (
-                              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>+{dayTasks.length - 3} daha</div>
-                            )}
+                            
+                            {/* Project Bars */}
+                            {dayProjects.map(p => {
+                              const start = new Date(p.start_date);
+                              const end = new Date(p.end_date);
+                              const current = new Date(calYear, calMonth, day);
+                              
+                              const isStart = current.getDate() === start.getDate() && current.getMonth() === start.getMonth() && current.getFullYear() === start.getFullYear();
+                              const isEnd = current.getDate() === end.getDate() && current.getMonth() === end.getMonth() && current.getFullYear() === end.getFullYear();
+                              
+                              // Determine if it's the first day of the week to display the title again
+                              // getDay() 1 is Monday. Or if it's the very first day of the month.
+                              const isStartOfWeek = new Date(calYear, calMonth, day).getDay() === 1 || day === 1;
+                              const showTitle = isStart || isStartOfWeek;
+                              
+                              return (
+                                <div key={`p-${p.id}`} style={{
+                                  background: 'repeating-linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.1) 8px, rgba(59, 130, 246, 0.2) 8px, rgba(59, 130, 246, 0.2) 16px)',
+                                  color: 'var(--accent)',
+                                  borderTop: '1px solid rgba(59, 130, 246, 0.2)',
+                                  borderBottom: '1px solid rgba(59, 130, 246, 0.2)',
+                                  borderLeft: isStart ? '3px solid var(--accent)' : 'none',
+                                  borderRight: isEnd ? '3px solid var(--accent)' : 'none',
+                                  borderTopLeftRadius: isStart ? '4px' : '0',
+                                  borderBottomLeftRadius: isStart ? '4px' : '0',
+                                  borderTopRightRadius: isEnd ? '4px' : '0',
+                                  borderBottomRightRadius: isEnd ? '4px' : '0',
+                                  marginLeft: isStart ? '4px' : '0',
+                                  marginRight: isEnd ? '4px' : '0',
+                                  marginBottom: '2px',
+                                  padding: '2px 6px',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 600,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  height: '20px',
+                                  lineHeight: '16px'
+                                }} title={`${p.name} (${new Date(p.start_date).toLocaleDateString()} - ${new Date(p.end_date).toLocaleDateString()})`}>
+                                  {showTitle ? `📁 ${p.name}` : ''}
+                                </div>
+                              );
+                            })}
+                            
+                            {/* Task Bars */}
+                            {dayTasks.map(t => {
+                              const startStr = t.start_date || t.created_at;
+                              const start = new Date(startStr);
+                              const end = t.due_date ? new Date(t.due_date) : new Date(startStr);
+                              const current = new Date(calYear, calMonth, day);
+
+                              const isStart = current.getDate() === start.getDate() && current.getMonth() === start.getMonth() && current.getFullYear() === start.getFullYear();
+                              const isEnd = current.getDate() === end.getDate() && current.getMonth() === end.getMonth() && current.getFullYear() === end.getFullYear();
+
+                              const isStartOfWeek = new Date(calYear, calMonth, day).getDay() === 1 || day === 1;
+                              const showTitle = isStart || isStartOfWeek;
+
+                              let bg, border, color;
+                              if (t.priority === 'urgent') { bg = 'var(--danger)'; border = 'var(--danger)'; color = '#fff'; }
+                              else if (t.priority === 'high') { bg = '#f97316'; border = '#f97316'; color = '#fff'; }
+                              else { bg = 'var(--bg-secondary)'; border = 'var(--border-color)'; color = 'var(--text-primary)'; }
+
+                              return (
+                                <div key={`t-${t.id}`} onClick={(e) => { e.stopPropagation(); setSelectedTask(t); }} style={{
+                                  background: bg,
+                                  color: color,
+                                  borderTop: `1px solid ${border}`,
+                                  borderBottom: `1px solid ${border}`,
+                                  borderLeft: isStart ? `3px solid ${border}` : 'none',
+                                  borderRight: isEnd ? `3px solid ${border}` : 'none',
+                                  borderTopLeftRadius: isStart ? '4px' : '0',
+                                  borderBottomLeftRadius: isStart ? '4px' : '0',
+                                  borderTopRightRadius: isEnd ? '4px' : '0',
+                                  borderBottomRightRadius: isEnd ? '4px' : '0',
+                                  marginLeft: isStart ? '4px' : '0',
+                                  marginRight: isEnd ? '4px' : '0',
+                                  marginBottom: '2px',
+                                  padding: '2px 6px',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  height: '20px',
+                                  lineHeight: '16px',
+                                  cursor: 'pointer'
+                                }} title={`${t.title} (${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()})`}>
+                                  {showTitle ? `✓ ${t.title}` : ''}
+                                </div>
+                              );
+                            })}
                           </>
                         )}
                       </div>
@@ -391,31 +504,56 @@ export default function MyTasks({ defaultView = 'board' }) {
                 <div className="card" style={{ marginTop: 14 }}>
                   <div className="card-body">
                     <h3 className="section-title" style={{ marginBottom: 12 }}>
-                      {selectedDay} {MONTHS_TR[calMonth]} {calYear} — Görevler
+                      {selectedDay} {MONTHS_TR[calMonth]} {calYear} — Detaylar
                     </h3>
-                    {getTasksForDay(selectedDay).length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bu gün için görev yok</p>
-                    ) : (
-                      getTasksForDay(selectedDay).map(t => (
-                        <div
-                          key={t.id}
-                          onClick={() => setSelectedTask(t)}
-                          style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '10px 0', borderBottom: '1px solid var(--border-light)', cursor: 'pointer'
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{t.title}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t.project_name || ''}</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <span className={`badge badge-${t.status === 'in_progress' ? 'progress' : t.status}`}>{STATUS_LABELS[t.status]}</span>
-                            <span className={`badge badge-${t.priority}`}>{PRIORITY_LABELS[t.priority]}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                    
+                    <div className="grid-2-col" style={{ gap: 20 }}>
+                      {/* Günün Projeleri */}
+                      <div>
+                        <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', paddingBottom: 6, marginBottom: 8, textTransform: 'uppercase' }}>Devam Eden Projeler</h4>
+                        {getProjectsForDay(selectedDay).length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bu güne denk gelen proje yok</p>
+                        ) : (
+                          getProjectsForDay(selectedDay).map(p => (
+                            <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ color: 'var(--accent)' }}>📁</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{p.name}</span>
+                              </div>
+                              <span className={`badge badge-${p.status === 'active' ? 'progress' : 'done'}`}>{p.status === 'active' ? 'Aktif' : 'Tamamlandı'}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Günün Görevleri */}
+                      <div>
+                        <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', paddingBottom: 6, marginBottom: 8, textTransform: 'uppercase' }}>Devam Eden Görevler</h4>
+                        {getTasksForDay(selectedDay).length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bu güne denk gelen görev yok</p>
+                        ) : (
+                          getTasksForDay(selectedDay).map(t => (
+                            <div
+                              key={t.id}
+                              onClick={() => setSelectedTask(t)}
+                              style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '8px 0', borderBottom: '1px solid var(--border-light)', cursor: 'pointer'
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{t.title}</div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t.project_name || ''}</div>
+                              </div>
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <span className={`badge badge-${t.status === 'in_progress' ? 'progress' : t.status}`}>{STATUS_LABELS[t.status]}</span>
+                                <span className={`badge badge-${t.priority}`}>{PRIORITY_LABELS[t.priority]}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

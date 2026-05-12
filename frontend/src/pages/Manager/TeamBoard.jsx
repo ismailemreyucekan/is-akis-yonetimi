@@ -22,7 +22,7 @@ export default function TeamBoard() {
   const [loading, setLoading] = useState(true);
   const [filterProject, setFilterProject] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', priority: 'medium', assigned_to: '', due_date: '', project_id: '', label: '' });
+  const [form, setForm] = useState({ title: '', description: '', priority: 'medium', assignees: [], start_date: '', due_date: '', project_id: '', label: '' });
 
   useEffect(() => { loadData(); }, [filterProject]);
 
@@ -75,11 +75,10 @@ export default function TeamBoard() {
     try {
       await taskService.createTask({
         ...form,
-        assigned_to: form.assigned_to ? parseInt(form.assigned_to) : null,
         project_id: form.project_id ? parseInt(form.project_id) : null,
       });
       setShowModal(false);
-      setForm({ title: '', description: '', priority: 'medium', assigned_to: '', due_date: '', project_id: '', label: '' });
+      setForm({ title: '', description: '', priority: 'medium', assignees: [], start_date: '', due_date: '', project_id: '', label: '' });
       loadData();
     } catch (err) {
       alert(err.response?.data?.error || 'Hata');
@@ -110,7 +109,7 @@ export default function TeamBoard() {
             <div className="loading-spinner"><div className="spinner"></div></div>
           ) : (
             <DragDropContext onDragEnd={onDragEnd}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, minHeight: 400 }}>
+              <div className="kanban-board">
                 {COLUMNS.map(col => (
                   <Droppable droppableId={col.id} key={col.id}>
                     {(provided, snapshot) => (
@@ -165,7 +164,7 @@ export default function TeamBoard() {
                                     {task.label && <span style={{ fontSize: '0.68rem', color: 'var(--accent)', background: 'var(--accent-bg)', padding: '1px 6px', borderRadius: 'var(--radius-full)' }}>{task.label}</span>}
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                    <span>{task.assignee_name || 'Atanmamış'}</span>
+                                    <span>{task.assignees?.length > 0 ? task.assignees.map(a => a.full_name).join(', ') : 'Atanmamış'}</span>
                                     {task.due_date && <span>{new Date(task.due_date).toLocaleDateString('tr-TR')}</span>}
                                   </div>
                                 </div>
@@ -210,20 +209,44 @@ export default function TeamBoard() {
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Atanan</label>
-                      <select className="form-select" value={form.assigned_to} onChange={e => setForm({...form, assigned_to: e.target.value})}>
-                        <option value="">Seçiniz</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
                       <label className="form-label">Proje</label>
-                      <select className="form-select" value={form.project_id} onChange={e => setForm({...form, project_id: e.target.value})}>
+                      <select className="form-select" value={form.project_id} onChange={e => setForm({...form, project_id: e.target.value, assignees: []})}>
                         <option value="">Seçiniz</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
+                    </div>
+                  </div>
+                  
+                  {form.project_id && (
+                    <div className="form-group">
+                      <label className="form-label">Atanan Kişiler (Proje Üyeleri)</label>
+                      <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: 8 }}>
+                        {projects.find(p => p.id === Number(form.project_id))?.members?.map(m => (
+                          <label key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, cursor: 'pointer', fontSize: '0.85rem' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={form.assignees.includes(m.user_id)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setForm(p => ({ ...p, assignees: [...p.assignees, m.user_id] }));
+                                } else {
+                                  setForm(p => ({ ...p, assignees: p.assignees.filter(id => id !== m.user_id) }));
+                                }
+                              }} 
+                            />
+                            {m.user_name}
+                          </label>
+                        ))}
+                        {(!projects.find(p => p.id === Number(form.project_id))?.members || projects.find(p => p.id === Number(form.project_id)).members.length === 0) && (
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Bu projeye kayıtlı üye bulunmuyor.</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Başlangıç Tarihi</label>
+                      <input type="date" className="form-input" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})} />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Bitiş Tarihi</label>

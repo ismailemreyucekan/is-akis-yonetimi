@@ -12,7 +12,14 @@ class Notification(db.Model):
     message = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(30), default='info')
     # Tipler: info, task_assigned, task_updated, task_note,
-    #         workflow_update, project_update, deadline_warning, warning
+    #         workflow_update, project_update, deadline_warning, warning,
+    #         meeting_reminder, meeting_invite, risk_update
+    priority = db.Column(db.String(20), default='normal')
+    # Öncelikler: low, normal, high, critical
+    category = db.Column(db.String(30), default='general')
+    # Kategoriler: general, task, meeting, risk, system
+    action_url = db.Column(db.String(500), nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
     is_read = db.Column(db.Boolean, default=False)
     related_task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=True)
     related_workflow_id = db.Column(db.Integer, db.ForeignKey('workflow_instances.id'), nullable=True)
@@ -31,10 +38,14 @@ class Notification(db.Model):
             'title': self.title,
             'message': self.message,
             'type': self.type,
+            'priority': self.priority,
+            'category': self.category,
+            'action_url': self.action_url,
             'is_read': self.is_read,
             'related_task_id': self.related_task_id,
             'related_workflow_id': self.related_workflow_id,
             'related_project_id': self.related_project_id,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

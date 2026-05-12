@@ -6,8 +6,11 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import UserManagement from './pages/Admin/UserManagement';
 import ProjectManagement from './pages/Admin/ProjectManagement';
+import NotificationSettings from './pages/Admin/NotificationSettings';
 import ManagerDashboard from './pages/Manager/ManagerDashboard';
 import TeamBoard from './pages/Manager/TeamBoard';
+import Meetings from './pages/Manager/Meetings';
+import RiskTracker from './pages/Manager/RiskTracker';
 import EmployeeDashboard from './pages/Employee/EmployeeDashboard';
 import MyTasks from './pages/Employee/MyTasks';
 
@@ -57,6 +60,9 @@ export default function App() {
           <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><UserManagement /></RoleRoute>} />
           <Route path="/admin/projects" element={<RoleRoute allowedRoles={['admin']}><ProjectManagement /></RoleRoute>} />
           <Route path="/admin/workflows" element={<RoleRoute allowedRoles={['admin']}><AdminDashboard /></RoleRoute>} />
+          <Route path="/admin/meetings" element={<RoleRoute allowedRoles={['admin']}><Meetings /></RoleRoute>} />
+          <Route path="/admin/risks" element={<RoleRoute allowedRoles={['admin']}><RiskTracker /></RoleRoute>} />
+          <Route path="/admin/notification-settings" element={<RoleRoute allowedRoles={['admin']}><NotificationSettings /></RoleRoute>} />
 
           {/* Manager Routes */}
           <Route path="/manager" element={<RoleRoute allowedRoles={['manager']}><ManagerDashboard /></RoleRoute>} />
@@ -65,11 +71,15 @@ export default function App() {
           <Route path="/manager/workflows" element={<RoleRoute allowedRoles={['manager']}><ManagerDashboard /></RoleRoute>} />
           <Route path="/manager/tasks" element={<RoleRoute allowedRoles={['manager']}><MyTasks key="manager-tasks" /></RoleRoute>} />
           <Route path="/manager/calendar" element={<RoleRoute allowedRoles={['manager']}><MyTasks key="manager-calendar" defaultView="calendar" /></RoleRoute>} />
+          <Route path="/manager/meetings" element={<RoleRoute allowedRoles={['manager']}><Meetings /></RoleRoute>} />
+          <Route path="/manager/risks" element={<RoleRoute allowedRoles={['manager']}><RiskTracker /></RoleRoute>} />
+          <Route path="/manager/notification-settings" element={<RoleRoute allowedRoles={['manager']}><NotificationSettings /></RoleRoute>} />
 
           {/* Employee Routes */}
           <Route path="/app" element={<RoleRoute allowedRoles={['employee']}><EmployeeDashboard /></RoleRoute>} />
           <Route path="/app/tasks" element={<RoleRoute allowedRoles={['employee']}><MyTasks key="employee-tasks" /></RoleRoute>} />
           <Route path="/app/calendar" element={<RoleRoute allowedRoles={['employee']}><MyTasks key="employee-calendar" defaultView="calendar" /></RoleRoute>} />
+          <Route path="/app/meetings" element={<RoleRoute allowedRoles={['employee']}><Meetings /></RoleRoute>} />
 
           {/* Root redirect */}
           <Route path="/" element={<RootRedirect />} />
