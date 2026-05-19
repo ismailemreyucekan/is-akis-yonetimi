@@ -629,12 +629,15 @@ a {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  /* Padding-top pushes flex center point below navbar */
+  padding: var(--navbar-height) 16px 16px;
   animation: fadeIn 150ms ease;
 }
 
@@ -642,12 +645,12 @@ a {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: 24px;
-  width: 90%;
-  max-width: 520px;
-  max-height: 85vh;
+  padding: 22px 24px;
+  width: 100%;
+  max-width: 540px;
+  max-height: calc(100vh - var(--navbar-height) - 32px);
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
   animation: slideUp 200ms ease;
 }
 
@@ -655,7 +658,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modal-title {
@@ -857,14 +862,8 @@ a {
 }
 
 @keyframes pageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ========================
@@ -979,20 +978,18 @@ a {
   .data-table thead th { padding: 8px 10px; font-size: 0.68rem; }
   .data-table tbody td { padding: 10px; font-size: 0.8rem; }
 
-  /* Modal tam ekran */
-  .modal-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 100vh;
-    border-radius: 0;
-    padding: 16px;
-    margin: 0;
-    min-height: 100vh;
+  /* Modal */
+  .modal-overlay {
+    padding: calc(var(--navbar-height) + 12px) 10px 16px;
   }
 
-  .modal-overlay {
-    align-items: flex-start;
+  .modal-content {
+    width: 95% !important;
+    max-width: 100% !important;
+    max-height: calc(100vh - var(--navbar-height) - 48px);
+    padding: 16px 18px;
   }
+
 
   .modal-header { margin-bottom: 14px; }
   .modal-title { font-size: 1rem; }

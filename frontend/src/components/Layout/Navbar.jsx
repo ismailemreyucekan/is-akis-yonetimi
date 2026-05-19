@@ -6,7 +6,7 @@ import {
   Sun, Moon, Bell, BellOff, Trash2, X, ClipboardList, Edit2,
   MessageSquare, RefreshCw, Folder, Clock, AlertTriangle,
   Calendar, Shield, AlertCircle, Info, Zap, LogOut, ChevronDown,
-  Menu, LayoutDashboard, Users, Workflow, ShieldAlert,
+  Menu, LayoutDashboard, Users, ShieldAlert,
   Handshake, FileText, ClipboardCheck, User
 } from 'lucide-react';
 import notificationService from '../../services/notificationService';
@@ -35,7 +35,6 @@ const NAV_CONFIG = {
       dropdown: [
         { path: '/admin/users', label: 'Kullanıcılar', icon: <Users size={15} /> },
         { path: '/admin/projects', label: 'Projeler', icon: <Folder size={15} /> },
-        { path: '/admin/workflows', label: 'İş Akışları', icon: <Workflow size={15} /> },
       ],
     },
     {
@@ -65,7 +64,6 @@ const NAV_CONFIG = {
       dropdown: [
         { path: '/manager/projects', label: 'Projelerim', icon: <Folder size={15} /> },
         { path: '/manager/board', label: 'Takım Panosu', icon: <ClipboardCheck size={15} /> },
-        { path: '/manager/workflows', label: 'İş Akışları', icon: <Workflow size={15} /> },
       ],
     },
     {

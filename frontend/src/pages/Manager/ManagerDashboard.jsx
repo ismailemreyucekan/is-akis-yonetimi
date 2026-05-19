@@ -9,6 +9,7 @@ import {
   AlertCircle, AlertTriangle, Calendar, ShieldAlert, RefreshCw, Plus, Folder
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ProjectCompletionChart from '../../components/Charts/ProjectCompletionChart';
 
 export default function ManagerDashboard() {
   const [stats, setStats] = useState(null);
@@ -79,6 +80,10 @@ export default function ManagerDashboard() {
                   ))}
                 </div>
               )}
+
+              {/* Proje Tamamlanma Grafiği */}
+              <ProjectCompletionChart projects={projects} />
+
 
               <div className="grid-2-col" style={{ marginBottom: 16 }}>
                 <div className="card">

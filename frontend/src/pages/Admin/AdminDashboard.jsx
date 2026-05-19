@@ -3,6 +3,8 @@ import Navbar from '../../components/Layout/Navbar';
 import adminService from '../../services/adminService';
 import meetingService from '../../services/meetingService';
 import riskService from '../../services/riskService';
+import projectService from '../../services/projectService';
+import ProjectCompletionChart from '../../components/Charts/ProjectCompletionChart';
 import { 
   Users, Folder, ClipboardList, CheckCircle, Hourglass, 
   Calendar, ShieldAlert, MessageSquare, PlusCircle, RefreshCw 
@@ -10,6 +12,7 @@ import {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [activity, setActivity] = useState([]);
   const [meetingStats, setMeetingStats] = useState(null);
   const [riskStats, setRiskStats] = useState(null);
@@ -17,16 +20,18 @@ export default function AdminDashboard() {
 
   async function loadData() {
     try {
-      const [statsData, actData, mStats, rStats] = await Promise.all([
+      const [statsData, actData, mStats, rStats, projData] = await Promise.all([
         adminService.getStats(),
         adminService.getActivity(15),
         meetingService.getStats().catch(() => ({ stats: null })),
-        riskService.getStats().catch(() => ({ stats: null }))
+        riskService.getStats().catch(() => ({ stats: null })),
+        projectService.getProjects().catch(() => ({ projects: [] }))
       ]);
       setStats(statsData.stats);
       setActivity(actData.activity);
       setMeetingStats(mStats.stats);
       setRiskStats(rStats.stats);
+      setProjects(projData.projects || []);
     } catch (err) {
       console.error('Dashboard yüklenemedi:', err);
     } finally {
@@ -78,6 +83,9 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Proje Tamamlanma Grafiği */}
+              <ProjectCompletionChart projects={projects} />
 
               {/* Operations Row */}
               <div className="grid-2-col" style={{ marginBottom: 20 }}>
