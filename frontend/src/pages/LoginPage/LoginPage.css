@@ -1,60 +1,434 @@
-.login-page {
+/* LoginPage.css - Odoo Inspired Landing Page Style */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+.odoo-landing-page {
+  width: 100%;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f4f5f7; /* Alt bölüm rengi */
+}
+
+/* Navbar */
+.odoo-navbar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  background: var(--bg-primary);
-  padding: 20px;
+  padding: 1.25rem 4rem;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 10;
 }
 
-.login-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  padding: 36px;
-  width: 100%;
-  max-width: 380px;
-  box-shadow: var(--shadow-md);
+[data-theme='dark'] .odoo-navbar {
+  background-color: #111827;
 }
 
-.login-header {
-  text-align: center;
-  margin-bottom: 28px;
+.odoo-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1f2937;
 }
 
-.login-icon { font-size: 2rem; margin-bottom: 10px; }
-.login-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
-.login-subtitle { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
-
-.login-error {
-  background: var(--danger-bg);
-  color: var(--danger);
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  margin-bottom: 16px;
-  text-align: center;
+[data-theme='dark'] .odoo-logo {
+  color: #f9fafb;
 }
 
-.login-footer {
-  text-align: center;
-  margin-top: 20px;
+.odoo-logo-icon {
+  font-size: 1.75rem;
 }
 
-.login-theme-toggle {
+.odoo-theme-toggle {
   background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
 }
 
-.login-theme-toggle:hover {
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  color: var(--accent);
+.odoo-theme-toggle:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+[data-theme='dark'] .odoo-theme-toggle {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .odoo-theme-toggle:hover {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+/* Hero Section */
+.odoo-hero-section {
+  background-color: #ffffff;
+  position: relative;
+  padding-top: 4rem;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme='dark'] .odoo-hero-section {
+  background-color: #111827;
+}
+
+.odoo-hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
+  z-index: 2;
+  margin-bottom: 2rem;
+}
+
+.odoo-hero-text {
+  flex: 1.2;
+}
+
+.odoo-headline {
+  font-family: 'Caveat', cursive; /* Handwritten look */
+  font-size: 4rem;
+  line-height: 1.1;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+[data-theme='dark'] .odoo-headline {
+  color: #f9fafb;
+}
+
+.odoo-highlight-marker {
+  background-color: #fbbf24; /* Odoo yellow highlight */
+  padding: 0 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  transform: rotate(-1deg);
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+  color: #111827;
+}
+
+.odoo-subheadline {
+  font-family: 'Caveat', cursive;
+  font-size: 2.5rem;
+  color: #374151;
+  line-height: 1.3;
+}
+
+[data-theme='dark'] .odoo-subheadline {
+  color: #d1d5db;
+}
+
+.odoo-highlight-underline {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+.odoo-highlight-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0.3rem;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background-color: #38bdf8; /* Odoo blue underline */
+  z-index: -1;
+  border-radius: 4px;
+  transform: rotate(1deg);
+}
+
+.odoo-hero-decoration {
+  position: relative;
+  margin-top: 2rem;
+  margin-left: 2rem;
+}
+
+.odoo-deco-text {
+  font-family: 'Caveat', cursive;
+  font-size: 1.75rem;
+  color: #6b7280;
+  position: absolute;
+  bottom: -10px;
+  right: 180px;
+  transform: rotate(-10deg);
+}
+
+[data-theme='dark'] .odoo-deco-text {
+  color: #9ca3af;
+}
+
+/* Form Card */
+.odoo-hero-form {
+  flex: 0.8;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.odoo-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='dark'] .odoo-login-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.odoo-form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+[data-theme='dark'] .odoo-form-title {
+  color: #f9fafb;
+}
+
+.odoo-error-msg {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.odoo-input-group {
+  margin-bottom: 1.25rem;
+}
+
+.odoo-input-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme='dark'] .odoo-input-group label {
+  color: #d1d5db;
+}
+
+.odoo-input-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #111827;
+  transition: all 0.2s;
+}
+
+[data-theme='dark'] .odoo-input-group input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.odoo-input-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.odoo-form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.odoo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+[data-theme='dark'] .odoo-checkbox {
+  color: #9ca3af;
+}
+
+.odoo-forgot-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.odoo-forgot-link:hover {
+  text-decoration: underline;
+}
+
+.odoo-btn-primary {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #714B67; /* Odoo dark purple/brownish brand color from button */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.odoo-btn-primary:hover {
+  background-color: #5c3d54;
+}
+
+/* Wave Divider */
+.odoo-wave-divider {
+  width: 100%;
+  line-height: 0;
+  margin-top: -2rem; /* Pull up to overlap slightly */
+  background-color: #ffffff; /* Match ABOVE section (Hero) */
+}
+
+[data-theme='dark'] .odoo-wave-divider {
+  background-color: #111827; /* Match ABOVE section (Hero) */
+}
+
+.odoo-wave-divider svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.odoo-wave-divider path {
+  fill: #f4f5f7; /* Fill color for wave matching below section */
+}
+
+[data-theme='dark'] .odoo-wave-divider path {
+  fill: #0f172a;
+}
+
+/* Capabilities Section */
+.odoo-capabilities-section {
+  background-color: #f4f5f7;
+  flex: 1;
+  padding: 3rem 2rem 6rem;
+  display: flex;
+  justify-content: center;
+}
+
+[data-theme='dark'] .odoo-capabilities-section {
+  background-color: #0f172a;
+}
+
+.odoo-capabilities-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.odoo-capability-card {
+  background: #ffffff;
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .odoo-capability-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.odoo-capability-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.capability-icon {
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+  display: inline-block;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme='dark'] .capability-icon {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.capability-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .capability-title {
+  color: #f9fafb;
+}
+
+.capability-desc {
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+[data-theme='dark'] .capability-desc {
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .odoo-hero-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .odoo-hero-form {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .odoo-headline {
+    font-size: 3rem;
+  }
+  
+  .odoo-subheadline {
+    font-size: 2rem;
+  }
+  
+  .odoo-hero-decoration {
+    display: none;
+  }
+  
+  .odoo-capabilities-container {
+    grid-template-columns: 1fr;
+  }
 }

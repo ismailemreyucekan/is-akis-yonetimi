@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
 import projectService from '../../services/projectService';
 import meetingService from '../../services/meetingService';
 import riskService from '../../services/riskService';
+import { 
+  ClipboardList, Hourglass, Search, CheckCircle, 
+  AlertCircle, AlertTriangle, Calendar, ShieldAlert, RefreshCw, Plus, Folder
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function ManagerDashboard() {
   const [stats, setStats] = useState(null);
@@ -41,8 +45,7 @@ export default function ManagerDashboard() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-dashboard">
         <Navbar title="Yönetici Paneli" />
         <div className="page-content">
           {loading ? (
@@ -59,15 +62,15 @@ export default function ManagerDashboard() {
               {stats && (
                 <div className="stats-grid animate-in">
                   {[
-                    { icon: '📋', label: 'Toplam Görev', value: stats.total, color: 'var(--accent)' },
-                    { icon: '⏳', label: 'Devam Ediyor', value: stats.in_progress, color: 'var(--warning)' },
-                    { icon: '🔍', label: 'İncelemede', value: stats.review, color: 'var(--info)' },
-                    { icon: '✅', label: 'Tamamlandı', value: stats.done, color: 'var(--success)' },
-                    { icon: '🔴', label: 'Acil', value: stats.urgent, color: 'var(--danger)' },
-                    { icon: '⚠️', label: 'Geciken', value: stats.overdue, color: '#f97316' },
+                    { icon: <ClipboardList size={20} />, label: 'Toplam Görev', value: stats.total, color: 'var(--accent)', bgColor: 'var(--accent-bg)' },
+                    { icon: <Hourglass size={20} />, label: 'Devam Ediyor', value: stats.in_progress, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
+                    { icon: <Search size={20} />, label: 'İncelemede', value: stats.review, color: 'var(--info)', bgColor: 'var(--info-bg)' },
+                    { icon: <CheckCircle size={20} />, label: 'Tamamlandı', value: stats.done, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+                    { icon: <AlertCircle size={20} />, label: 'Acil', value: stats.urgent, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
+                    { icon: <AlertTriangle size={20} />, label: 'Geciken', value: stats.overdue, color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.08)' },
                   ].map((c, i) => (
-                    <div key={i} className="stat-card">
-                      <div className="stat-icon" style={{ background: `${c.color}15`, color: c.color }}>{c.icon}</div>
+                    <div key={i} className="stat-card" style={{ borderLeft: `4px solid ${c.color}` }}>
+                      <div className="stat-icon" style={{ background: c.bgColor, color: c.color }}>{c.icon}</div>
                       <div className="stat-info">
                         <div className="stat-value">{c.value}</div>
                         <div className="stat-label">{c.label}</div>
@@ -80,11 +83,21 @@ export default function ManagerDashboard() {
               <div className="grid-2-col" style={{ marginBottom: 16 }}>
                 <div className="card">
                   <div className="card-body">
-                    <h3 className="section-title" style={{ marginBottom: 12 }}>📅 Yaklaşan Toplantılar</h3>
+                    <h3 className="section-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Calendar size={18} /> Yaklaşan Toplantılar
+                    </h3>
                     {upcomingMeetings.length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Yaklaşan toplantı yok</p>
+                      <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+                        <div style={{ background: 'var(--bg-input)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                          <Calendar size={24} color="var(--text-muted)" />
+                        </div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 16 }}>Yaklaşan toplantı yok</p>
+                        <Link to="/manager/meetings" state={{ openCreate: true }} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <Plus size={14} /> Yeni Toplantı Planla
+                        </Link>
+                      </div>
                     ) : upcomingMeetings.map(m => (
-                      <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-light)' }}>
+                      <div key={m.id} className="list-item">
                         <div>
                           <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{m.title}</div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -98,7 +111,9 @@ export default function ManagerDashboard() {
                 </div>
                 <div className="card">
                   <div className="card-body">
-                    <h3 className="section-title" style={{ marginBottom: 12 }}>🛡️ Risk Durumu</h3>
+                    <h3 className="section-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ShieldAlert size={18} /> Risk Durumu
+                    </h3>
                     {riskStats ? (
                       <div className="grid-3-col">
                         {[
@@ -122,9 +137,17 @@ export default function ManagerDashboard() {
                   <div className="card-body">
                     <h3 className="section-title" style={{ marginBottom: 12 }}>Projelerim</h3>
                     {projects.length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Proje yok</p>
+                      <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+                        <div style={{ background: 'var(--bg-input)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                          <Folder size={24} color="var(--text-muted)" />
+                        </div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 16 }}>Henüz aktif proje yok</p>
+                        <Link to="/manager/projects" state={{ openCreate: true }} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <Plus size={14} /> Yeni Proje
+                        </Link>
+                      </div>
                     ) : projects.slice(0, 5).map(p => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-light)' }}>
+                      <div key={p.id} className="list-item">
                         <div>
                           <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{p.name}</div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p.task_count} görev · {p.member_count} üye</div>
@@ -137,11 +160,21 @@ export default function ManagerDashboard() {
                 <div className="card">
                   <div className="card-body">
                     <h3 className="section-title" style={{ marginBottom: 12 }}>Son Görevler</h3>
-                    {recentTasks.map(t => (
-                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-light)' }}>
+                    {recentTasks.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+                        <div style={{ background: 'var(--bg-input)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                          <ClipboardList size={24} color="var(--text-muted)" />
+                        </div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 16 }}>Görüntülenecek görev yok</p>
+                        <Link to="/manager/tasks" state={{ openCreate: true }} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <Plus size={14} /> Yeni Görev
+                        </Link>
+                      </div>
+                    ) : recentTasks.map(t => (
+                      <div key={t.id} className="list-item">
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {t.is_recurring && '🔄 '}{t.title}
+                          <div style={{ fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center' }}>
+                            {t.is_recurring && <RefreshCw size={14} style={{ marginRight: 6 }} />}{t.title}
                           </div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                             {t.assignees?.length > 0 ? t.assignees.map(a => a.full_name).join(', ') : 'Atanmamış'} · {t.due_date ? new Date(t.due_date).toLocaleDateString('tr-TR') : 'Tarih yok'}

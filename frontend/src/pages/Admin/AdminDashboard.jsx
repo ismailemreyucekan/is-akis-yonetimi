@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import adminService from '../../services/adminService';
 import meetingService from '../../services/meetingService';
 import riskService from '../../services/riskService';
+import { 
+  Users, Folder, ClipboardList, CheckCircle, Hourglass, 
+  Calendar, ShieldAlert, MessageSquare, PlusCircle, RefreshCw 
+} from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -34,11 +37,11 @@ export default function AdminDashboard() {
   useEffect(() => { loadData(); }, []);
 
   const statCards = stats ? [
-    { icon: '👥', label: 'Kullanıcılar', value: stats.total_users, color: 'var(--accent)' },
-    { icon: '📁', label: 'Aktif Projeler', value: stats.active_projects, color: 'var(--success)' },
-    { icon: '📋', label: 'Toplam Görev', value: stats.total_tasks, color: 'var(--info)' },
-    { icon: '✅', label: 'Tamamlanan', value: stats.completed_tasks, color: 'var(--success)' },
-    { icon: '⏳', label: 'Bekleyen', value: stats.pending_tasks, color: 'var(--warning)' },
+    { icon: <Users size={20} />, label: 'Kullanıcılar', value: stats.total_users, color: 'var(--accent)', bgColor: 'var(--accent-bg)' },
+    { icon: <Folder size={20} />, label: 'Aktif Projeler', value: stats.active_projects, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+    { icon: <ClipboardList size={20} />, label: 'Toplam Görev', value: stats.total_tasks, color: 'var(--info)', bgColor: 'var(--info-bg)' },
+    { icon: <CheckCircle size={20} />, label: 'Tamamlanan', value: stats.completed_tasks, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+    { icon: <Hourglass size={20} />, label: 'Bekleyen', value: stats.pending_tasks, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
   ] : [];
 
   const actionLabels = {
@@ -48,8 +51,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-dashboard">
         <Navbar title="Dashboard" />
         <div className="page-content">
           {loading ? (
@@ -65,8 +67,8 @@ export default function AdminDashboard() {
 
               <div className="stats-grid animate-in">
                 {statCards.map((card, i) => (
-                  <div key={i} className="stat-card">
-                    <div className="stat-icon" style={{ background: `${card.color}15`, color: card.color }}>
+                  <div key={i} className="stat-card" style={{ borderLeft: `4px solid ${card.color}` }}>
+                    <div className="stat-icon" style={{ background: card.bgColor, color: card.color }}>
                       {card.icon}
                     </div>
                     <div className="stat-info">
@@ -82,7 +84,9 @@ export default function AdminDashboard() {
                 {/* Meeting Widget */}
                 <div className="card">
                   <div className="card-body">
-                    <h3 className="section-title" style={{ marginBottom: 12 }}>📅 Toplantı Özeti</h3>
+                    <h3 className="section-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Calendar size={18} /> Toplantı Özeti
+                    </h3>
                     {meetingStats ? (
                       <div className="grid-3-col">
                         {[
@@ -105,7 +109,9 @@ export default function AdminDashboard() {
                 {/* Risk Widget */}
                 <div className="card">
                   <div className="card-body">
-                    <h3 className="section-title" style={{ marginBottom: 12 }}>🛡️ Risk & Sorun Özeti</h3>
+                    <h3 className="section-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <ShieldAlert size={18} /> Risk & Sorun Özeti
+                    </h3>
                     {riskStats ? (
                       <div className="grid-4-col">
                         {[
@@ -157,8 +163,8 @@ export default function AdminDashboard() {
                           display: 'flex', alignItems: 'flex-start', gap: 10,
                           padding: '8px 0', borderBottom: '1px solid var(--border-light)'
                         }}>
-                          <span style={{ fontSize: '0.9rem' }}>
-                            {log.action === 'note' ? '💬' : log.action === 'created' ? '➕' : '🔄'}
+                          <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {log.action === 'note' ? <MessageSquare size={16} /> : log.action === 'created' ? <PlusCircle size={16} /> : <RefreshCw size={16} />}
                           </span>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.82rem', color: 'var(--text-primary)' }}>

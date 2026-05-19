@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import riskService from '../../services/riskService';
 import projectService from '../../services/projectService';
 import api from '../../services/api';
+import { 
+  Plus, BarChart2, AlertCircle, AlertTriangle, Hourglass, 
+  CheckCircle, ShieldAlert, Folder, Eye, Edit2, Trash2, 
+  X, FileText, Play 
+} from 'lucide-react';
 
 const SEVERITY_LABELS = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
 const SEVERITY_COLORS = { low: 'var(--text-muted)', medium: 'var(--warning)', high: '#f97316', critical: 'var(--danger)' };
@@ -130,8 +134,7 @@ export default function RiskTracker() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-risks">
         <Navbar title="Risk & Sorun Takibi" />
         <div className="page-content">
           {loading ? (
@@ -144,8 +147,8 @@ export default function RiskTracker() {
                   <p className="page-subtitle">Proje risklerini ve sorunlarını takip edin</p>
                 </div>
                 {canManage && (
-                  <button className="btn btn-primary" onClick={openCreate}>
-                    ➕ Yeni Risk/Sorun
+                  <button className="btn btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Plus size={16} /> Yeni Risk/Sorun
                   </button>
                 )}
               </div>
@@ -154,16 +157,16 @@ export default function RiskTracker() {
               {stats && (
                 <div className="stats-grid animate-in">
                   {[
-                    { icon: '📊', label: 'Toplam', value: stats.total, color: 'var(--accent)' },
-                    { icon: '🔴', label: 'Kritik', value: stats.critical, color: 'var(--danger)' },
-                    { icon: '🟠', label: 'Yüksek', value: stats.high, color: '#f97316' },
-                    { icon: '🟡', label: 'Açık', value: stats.open, color: 'var(--warning)' },
-                    { icon: '🔵', label: 'İşlemde', value: stats.in_progress, color: 'var(--info)' },
-                    { icon: '✅', label: 'Çözülen', value: stats.resolved, color: 'var(--success)' },
-                    { icon: '⚠️', label: 'Geciken', value: stats.overdue, color: 'var(--danger)' },
+                    { icon: <BarChart2 size={20} />, label: 'Toplam', value: stats.total, color: 'var(--accent)', bgColor: 'var(--accent-bg)' },
+                    { icon: <AlertCircle size={20} />, label: 'Kritik', value: stats.critical, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
+                    { icon: <AlertCircle size={20} />, label: 'Yüksek', value: stats.high, color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.08)' },
+                    { icon: <AlertTriangle size={20} />, label: 'Açık', value: stats.open, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
+                    { icon: <Hourglass size={20} />, label: 'İşlemde', value: stats.in_progress, color: 'var(--info)', bgColor: 'var(--info-bg)' },
+                    { icon: <CheckCircle size={20} />, label: 'Çözülen', value: stats.resolved, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+                    { icon: <AlertTriangle size={20} />, label: 'Geciken', value: stats.overdue, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
                   ].map((c, i) => (
-                    <div key={i} className="stat-card">
-                      <div className="stat-icon" style={{ background: `${c.color}15`, color: c.color }}>{c.icon}</div>
+                    <div key={i} className="stat-card" style={{ borderLeft: `4px solid ${c.color}` }}>
+                      <div className="stat-icon" style={{ background: c.bgColor, color: c.color }}>{c.icon}</div>
                       <div className="stat-info">
                         <div className="stat-value">{c.value}</div>
                         <div className="stat-label">{c.label}</div>
@@ -207,7 +210,7 @@ export default function RiskTracker() {
                 <div className="card-body" style={{ padding: 0 }}>
                   {risks.length === 0 ? (
                     <div className="empty-state">
-                      <span className="empty-state-icon">🛡️</span>
+                      <span className="empty-state-icon"><ShieldAlert size={48} strokeWidth={1} color="var(--text-muted)" /></span>
                       <div className="empty-state-title">Risk/Sorun bulunamadı</div>
                       <p className="empty-state-text">Yeni bir risk veya sorun eklemek için butonu kullanın.</p>
                     </div>
@@ -233,7 +236,9 @@ export default function RiskTracker() {
                                 {r.title}
                               </div>
                               {r.project_name && (
-                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>📁 {r.project_name}</div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                                  <Folder size={12} /> {r.project_name}
+                                </div>
                               )}
                             </td>
                             <td>
@@ -260,11 +265,11 @@ export default function RiskTracker() {
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: 4 }}>
-                                <button className="btn-icon" title="Detay" onClick={() => setDetailRisk(r)}>👁️</button>
+                                <button className="btn-icon" title="Detay" onClick={() => setDetailRisk(r)}><Eye size={16} /></button>
                                 {canManage && (
                                   <>
-                                    <button className="btn-icon" title="Düzenle" onClick={() => openEdit(r)}>✏️</button>
-                                    <button className="btn-icon" title="Sil" onClick={() => handleDelete(r.id)}>🗑️</button>
+                                    <button className="btn-icon" title="Düzenle" onClick={() => openEdit(r)}><Edit2 size={16} /></button>
+                                    <button className="btn-icon" title="Sil" onClick={() => handleDelete(r.id)}><Trash2 size={16} /></button>
                                   </>
                                 )}
                               </div>
@@ -285,7 +290,7 @@ export default function RiskTracker() {
               <div className="modal-content" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">{editRisk ? 'Risk/Sorun Düzenle' : 'Yeni Risk/Sorun'}</h2>
-                  <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
@@ -360,7 +365,6 @@ export default function RiskTracker() {
                         ))}
                       </select>
                     </div>
-                  </div>
                   
                   {form.project_id && (
                     <div className="form-group">
@@ -421,7 +425,7 @@ export default function RiskTracker() {
               <div className="modal-content" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">{detailRisk.title}</h2>
-                  <button className="modal-close" onClick={() => setDetailRisk(null)}>✕</button>
+                  <button className="modal-close" onClick={() => setDetailRisk(null)}><X size={20} /></button>
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -450,7 +454,7 @@ export default function RiskTracker() {
 
                 {detailRisk.description && (
                   <div style={{ marginBottom: 14 }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>📝 Açıklama</h4>
+                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><FileText size={16} /> Açıklama</h4>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
                       {detailRisk.description}
                     </p>
@@ -459,7 +463,7 @@ export default function RiskTracker() {
 
                 {detailRisk.mitigation_plan && (
                   <div style={{ marginBottom: 14 }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>🛡️ Azaltma Planı</h4>
+                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={16} /> Azaltma Planı</h4>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
                                   background: 'var(--bg-input)', padding: 10, borderRadius: 'var(--radius-md)' }}>
                       {detailRisk.mitigation_plan}
@@ -469,7 +473,7 @@ export default function RiskTracker() {
 
                 {detailRisk.resolution_notes && (
                   <div style={{ marginBottom: 14 }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>✅ Çözüm Notları</h4>
+                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={16} /> Çözüm Notları</h4>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
                                   background: 'var(--bg-input)', padding: 10, borderRadius: 'var(--radius-md)' }}>
                       {detailRisk.resolution_notes}
@@ -479,17 +483,17 @@ export default function RiskTracker() {
 
                 {canManage && (
                   <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={() => { openEdit(detailRisk); setDetailRisk(null); }}>
-                      ✏️ Düzenle
+                    <button className="btn btn-secondary" onClick={() => { openEdit(detailRisk); setDetailRisk(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Edit2 size={16} /> Düzenle
                     </button>
                     {detailRisk.status === 'open' && (
-                      <button className="btn btn-primary" onClick={() => { handleQuickStatus(detailRisk.id, 'in_progress'); setDetailRisk(null); }}>
-                        ▶ İşleme Al
+                      <button className="btn btn-primary" onClick={() => { handleQuickStatus(detailRisk.id, 'in_progress'); setDetailRisk(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Play size={16} /> İşleme Al
                       </button>
                     )}
                     {detailRisk.status === 'in_progress' && (
-                      <button className="btn btn-primary" onClick={() => { handleQuickStatus(detailRisk.id, 'resolved'); setDetailRisk(null); }}>
-                        ✅ Çözüldü
+                      <button className="btn btn-primary" onClick={() => { handleQuickStatus(detailRisk.id, 'resolved'); setDetailRisk(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCircle size={16} /> Çözüldü
                       </button>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import taskService from '../../services/taskService';
+import { X, MessageSquare, Plus, RefreshCw, ClipboardList } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'todo', label: 'Yapılacak' },
@@ -66,7 +67,7 @@ export default function TaskDetailModal({ task, onClose, onUpdate }) {
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
         <div className="modal-header">
           <h2 className="modal-title">{task.title}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
         <div className="tabs">
@@ -147,8 +148,8 @@ export default function TaskDetailModal({ task, onClose, onUpdate }) {
                   display: 'flex', gap: 10, padding: '10px 0',
                   borderBottom: '1px solid var(--border-light)'
                 }}>
-                  <span style={{ fontSize: '0.9rem', marginTop: 2 }}>
-                    {log.action === 'note' ? '💬' : log.action === 'created' ? '➕' : log.action === 'status_changed' ? '🔄' : '📋'}
+                  <span style={{ marginTop: 2, display: 'flex', alignItems: 'center' }}>
+                    {log.action === 'note' ? <MessageSquare size={16} /> : log.action === 'created' ? <Plus size={16} /> : log.action === 'status_changed' ? <RefreshCw size={16} /> : <ClipboardList size={16} />}
                   </span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '0.82rem' }}>
@@ -193,8 +194,8 @@ export default function TaskDetailModal({ task, onClose, onUpdate }) {
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button type="submit" className="btn btn-primary" disabled={!note.trim() || submitting}>
-                {submitting ? 'Gönderiliyor...' : '💬 Not Ekle'}
+              <button type="submit" className="btn btn-primary" disabled={!note.trim() || submitting} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {submitting ? 'Gönderiliyor...' : <><MessageSquare size={16} /> Not Ekle</>}
               </button>
             </div>
           </form>

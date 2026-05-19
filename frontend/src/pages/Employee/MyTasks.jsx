@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
 import projectService from '../../services/projectService';
 import TaskDetailModal from '../../components/Tasks/TaskDetailModal';
+import { LayoutDashboard, List, ClipboardList, Folder, Calendar, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const COLUMNS = [
   { id: 'todo', title: 'Yapılacak', color: 'var(--text-muted)' },
@@ -194,8 +194,7 @@ export default function MyTasks({ defaultView = 'board' }) {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-tasks">
         <Navbar title="Görevlerim" />
         <div className="page-content">
           <div className="page-header">
@@ -205,8 +204,8 @@ export default function MyTasks({ defaultView = 'board' }) {
             </div>
             {defaultView !== 'calendar' && (
               <div className="view-toggle">
-                <button className={`view-toggle-btn ${view === 'board' ? 'active' : ''}`} onClick={() => setView('board')}>📋 Pano</button>
-                <button className={`view-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>📄 Liste</button>
+                <button className={`view-toggle-btn ${view === 'board' ? 'active' : ''}`} onClick={() => setView('board')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><LayoutDashboard size={16} /> Pano</button>
+                <button className={`view-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><List size={16} /> Liste</button>
               </div>
             )}
           </div>
@@ -312,7 +311,7 @@ export default function MyTasks({ defaultView = 'board' }) {
 
               {tasks.length === 0 ? (
                 <div className="card"><div className="empty-state">
-                  <div className="empty-state-icon">📋</div>
+                  <div className="empty-state-icon"><ClipboardList size={48} strokeWidth={1} color="var(--text-muted)" /></div>
                   <div className="empty-state-title">Görev bulunamadı</div>
                 </div></div>
               ) : (
@@ -327,9 +326,9 @@ export default function MyTasks({ defaultView = 'board' }) {
                       <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-primary)' }}>{task.title}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>
-                            {task.project_name && `📁 ${task.project_name} · `}
-                            {task.due_date ? `📅 ${new Date(task.due_date).toLocaleDateString('tr-TR')}` : ''}
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {task.project_name && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Folder size={12} /> {task.project_name}</span>}
+                            {task.due_date && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} /> {new Date(task.due_date).toLocaleDateString('tr-TR')}</span>}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
@@ -354,9 +353,9 @@ export default function MyTasks({ defaultView = 'board' }) {
             /* ===== CALENDAR VIEW ===== */
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <button className="btn btn-secondary btn-sm" onClick={prevMonth}>← Önceki</button>
+                <button className="btn btn-secondary btn-sm" onClick={prevMonth} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ChevronLeft size={16} /> Önceki</button>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{MONTHS_TR[calMonth]} {calYear}</h2>
-                <button className="btn btn-secondary btn-sm" onClick={nextMonth}>Sonraki →</button>
+                <button className="btn btn-secondary btn-sm" onClick={nextMonth} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>Sonraki <ChevronRight size={16} /></button>
               </div>
 
               <div className="card" style={{ overflow: 'hidden' }}>
@@ -439,7 +438,7 @@ export default function MyTasks({ defaultView = 'board' }) {
                                   height: '20px',
                                   lineHeight: '16px'
                                 }} title={`${p.name} (${new Date(p.start_date).toLocaleDateString()} - ${new Date(p.end_date).toLocaleDateString()})`}>
-                                  {showTitle ? `📁 ${p.name}` : ''}
+                                  {showTitle ? <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Folder size={10} /> {p.name}</span> : ''}
                                 </div>
                               );
                             })}
@@ -487,7 +486,7 @@ export default function MyTasks({ defaultView = 'board' }) {
                                   lineHeight: '16px',
                                   cursor: 'pointer'
                                 }} title={`${t.title} (${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()})`}>
-                                  {showTitle ? `✓ ${t.title}` : ''}
+                                  {showTitle ? <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} /> {t.title}</span> : ''}
                                 </div>
                               );
                             })}
@@ -517,7 +516,7 @@ export default function MyTasks({ defaultView = 'board' }) {
                           getProjectsForDay(selectedDay).map(p => (
                             <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ color: 'var(--accent)' }}>📁</span>
+                                <span style={{ color: 'var(--accent)' }}><Folder size={14} /></span>
                                 <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{p.name}</span>
                               </div>
                               <span className={`badge badge-${p.status === 'active' ? 'progress' : 'done'}`}>{p.status === 'active' ? 'Aktif' : 'Tamamlandı'}</span>

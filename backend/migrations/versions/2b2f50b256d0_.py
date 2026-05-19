@@ -1,8 +1,8 @@
-""" Initial migration
+"""empty message
 
-Revision ID: 2517843c863b
+Revision ID: 2b2f50b256d0
 Revises: 
-Create Date: 2026-04-23 00:03:39.119670
+Create Date: 2026-05-18 00:45:37.512599
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2517843c863b'
+revision = '2b2f50b256d0'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -49,6 +49,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('reminder_configs',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('reminder_type', sa.String(length=30), nullable=False),
+    sa.Column('timing_minutes', sa.Integer(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('created_by', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'reminder_type', name='uq_user_reminder_type')
+    )
     op.create_table('workflows',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=200), nullable=False),
@@ -58,6 +72,26 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('meetings',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=300), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('agenda', sa.Text(), nullable=True),
+    sa.Column('start_time', sa.DateTime(), nullable=False),
+    sa.Column('end_time', sa.DateTime(), nullable=False),
+    sa.Column('location', sa.String(length=300), nullable=True),
+    sa.Column('meeting_link', sa.String(length=500), nullable=True),
+    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('notes', sa.Text(), nullable=True),
+    sa.Column('outcomes', sa.Text(), nullable=True),
+    sa.Column('created_by', sa.Integer(), nullable=False),
+    sa.Column('project_id', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('project_members',
@@ -70,6 +104,26 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('project_id', 'user_id', name='uq_project_user')
+    )
+    op.create_table('risks',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=300), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('risk_type', sa.String(length=20), nullable=False),
+    sa.Column('severity', sa.String(length=20), nullable=False),
+    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('probability', sa.String(length=20), nullable=True),
+    sa.Column('impact', sa.String(length=20), nullable=True),
+    sa.Column('project_id', sa.Integer(), nullable=True),
+    sa.Column('deadline', sa.DateTime(), nullable=True),
+    sa.Column('mitigation_plan', sa.Text(), nullable=True),
+    sa.Column('resolution_notes', sa.Text(), nullable=True),
+    sa.Column('created_by', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('workflow_instances',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -95,24 +149,46 @@ def upgrade():
     sa.ForeignKeyConstraint(['workflow_id'], ['workflows.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('meeting_participants',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('meeting_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('is_required', sa.Boolean(), nullable=True),
+    sa.ForeignKeyConstraint(['meeting_id'], ['meetings.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('meeting_id', 'user_id', name='uq_meeting_participant')
+    )
+    op.create_table('risk_assignees',
+    sa.Column('risk_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['risk_id'], ['risks.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('risk_id', 'user_id')
+    )
     op.create_table('tasks',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=200), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=False),
     sa.Column('priority', sa.String(length=20), nullable=False),
+    sa.Column('start_date', sa.DateTime(), nullable=True),
     sa.Column('due_date', sa.DateTime(), nullable=True),
     sa.Column('label', sa.String(length=50), nullable=True),
     sa.Column('estimated_hours', sa.Float(), nullable=True),
-    sa.Column('assigned_to', sa.Integer(), nullable=True),
+    sa.Column('is_recurring', sa.Boolean(), nullable=True),
+    sa.Column('recurrence_rule', sa.Text(), nullable=True),
+    sa.Column('recurrence_parent_id', sa.Integer(), nullable=True),
+    sa.Column('recurrence_end_date', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=False),
     sa.Column('project_id', sa.Integer(), nullable=True),
     sa.Column('workflow_instance_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['assigned_to'], ['users.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ),
+    sa.ForeignKeyConstraint(['recurrence_parent_id'], ['tasks.id'], ),
     sa.ForeignKeyConstraint(['workflow_instance_id'], ['workflow_instances.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -135,6 +211,10 @@ def upgrade():
     sa.Column('title', sa.String(length=200), nullable=False),
     sa.Column('message', sa.Text(), nullable=False),
     sa.Column('type', sa.String(length=30), nullable=True),
+    sa.Column('priority', sa.String(length=20), nullable=True),
+    sa.Column('category', sa.String(length=30), nullable=True),
+    sa.Column('action_url', sa.String(length=500), nullable=True),
+    sa.Column('expires_at', sa.DateTime(), nullable=True),
     sa.Column('is_read', sa.Boolean(), nullable=True),
     sa.Column('related_task_id', sa.Integer(), nullable=True),
     sa.Column('related_workflow_id', sa.Integer(), nullable=True),
@@ -146,18 +226,31 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('task_assignees',
+    sa.Column('task_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('task_id', 'user_id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('task_assignees')
     op.drop_table('notifications')
     op.drop_table('activity_logs')
     op.drop_table('tasks')
+    op.drop_table('risk_assignees')
+    op.drop_table('meeting_participants')
     op.drop_table('workflow_steps')
     op.drop_table('workflow_instances')
+    op.drop_table('risks')
     op.drop_table('project_members')
+    op.drop_table('meetings')
     op.drop_table('workflows')
+    op.drop_table('reminder_configs')
     op.drop_table('projects')
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_users_username'))

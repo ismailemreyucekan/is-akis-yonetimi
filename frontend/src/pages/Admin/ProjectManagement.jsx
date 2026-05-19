@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Layout/Navbar';
 import projectService from '../../services/projectService';
 import authService from '../../services/authService';
+import { Folder, ClipboardList, Users, Edit2, Trash2, X } from 'lucide-react';
 
 export default function ProjectManagement() {
   const [projects, setProjects] = useState([]);
@@ -13,8 +14,17 @@ export default function ProjectManagement() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [form, setForm] = useState({ name: '', description: '', status: 'active', start_date: '', end_date: '' });
   const [memberForm, setMemberForm] = useState({ user_id: '', role_in_project: 'member' });
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      openNew();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   async function loadData() {
     try {
@@ -112,8 +122,7 @@ export default function ProjectManagement() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-projects">
         <Navbar title="Proje Yönetimi" />
         <div className="page-content">
           <div className="page-header">
@@ -128,7 +137,7 @@ export default function ProjectManagement() {
             <div className="loading-spinner"><div className="spinner"></div></div>
           ) : projects.length === 0 ? (
             <div className="card"><div className="empty-state">
-              <div className="empty-state-icon">📁</div>
+              <div className="empty-state-icon"><Folder size={48} strokeWidth={1} color="var(--text-muted)" /></div>
               <div className="empty-state-title">Henüz proje yok</div>
             </div></div>
           ) : (
@@ -142,13 +151,13 @@ export default function ProjectManagement() {
                     </div>
                     {p.description && <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 12 }}>{p.description}</p>}
                     <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                      <span>📋 {p.task_count} görev</span>
-                      <span>👥 {p.member_count} üye</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><ClipboardList size={14} /> {p.task_count} görev</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={14} /> {p.member_count} üye</span>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}>✏️ Düzenle</button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openMembers(p)}>👥 Üyeler</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>🗑️</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Edit2 size={14} /> Düzenle</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => openMembers(p)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Users size={14} /> Üyeler</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 </div>
@@ -162,7 +171,7 @@ export default function ProjectManagement() {
               <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">{selectedProject ? 'Proje Düzenle' : 'Yeni Proje'}</h2>
-                  <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
@@ -208,7 +217,7 @@ export default function ProjectManagement() {
               <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
                 <div className="modal-header">
                   <h2 className="modal-title">{selectedProject.name} — Üyeler</h2>
-                  <button className="modal-close" onClick={() => setShowMemberModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowMemberModal(false)}><X size={20} /></button>
                 </div>
 
                 {/* Mevcut üyeler */}
@@ -224,7 +233,7 @@ export default function ProjectManagement() {
                           {roleLabels[m.role_in_project]}
                         </span>
                       </div>
-                      <button className="btn-icon" onClick={() => handleRemoveMember(m.user_id)} title="Çıkar" style={{ color: 'var(--danger)' }}>✕</button>
+                      <button className="btn-icon" onClick={() => handleRemoveMember(m.user_id)} title="Çıkar" style={{ color: 'var(--danger)' }}><X size={16} /></button>
                     </div>
                   ))}
                 </div>

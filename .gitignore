@@ -1,12 +1,60 @@
-# Ortam değişkenleri (şifreler burada!)
+# ========================
+# ORTAM DEĞİŞKENLERİ (GİZLİ)
+# ========================
 .env
+.env.local
+.env.*.local
+*.env
 
-# Python
+# ========================
+# PYTHON / BACKEND
+# ========================
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.pyw
+.Python
 venv/
+env/
+.venv/
 instance/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
 
-# Node
+# ========================
+# VERİTABANI
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================
+# NODE / FRONTEND
+# ========================
 node_modules/
 dist/
+.cache/
+.parcel-cache/
+*.local
+
+# ========================
+# IDE / EDİTÖR
+# ========================
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ========================
+# İŞLETİM SİSTEMİ
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini

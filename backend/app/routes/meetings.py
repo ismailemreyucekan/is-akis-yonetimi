@@ -68,7 +68,7 @@ def create_meeting():
         meeting_link=data.get('meeting_link'),
         status='scheduled',
         created_by=user.id,
-        project_id=data.get('project_id')
+        project_id=data.get('project_id') or None
     )
 
     db.session.add(meeting)
@@ -139,7 +139,7 @@ def update_meeting(meeting_id):
     if 'meeting_link' in data:
         meeting.meeting_link = data['meeting_link']
     if 'project_id' in data:
-        meeting.project_id = data['project_id']
+        meeting.project_id = data['project_id'] or None
 
     db.session.commit()
 

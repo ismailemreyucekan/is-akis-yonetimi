@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Layout/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import meetingService from '../../services/meetingService';
 import api from '../../services/api';
+import { 
+  Plus, Calendar, CheckCircle2, Clock, CheckCircle, 
+  XCircle, Folder, Link, Eye, Edit2, Trash2, 
+  X, ClipboardList, FileText, Users, Target 
+} from 'lucide-react';
 
 const STATUS_LABELS = { scheduled: 'Planlandı', completed: 'Tamamlandı', cancelled: 'İptal' };
 const STATUS_BADGE = { scheduled: 'progress', completed: 'done', cancelled: 'urgent' };
@@ -18,6 +23,8 @@ export default function Meetings() {
   const [detailMeeting, setDetailMeeting] = useState(null);
   const [filter, setFilter] = useState('all');
   const [users, setUsers] = useState([]);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const canManage = user?.role === 'admin' || user?.role === 'manager';
 
@@ -47,6 +54,13 @@ export default function Meetings() {
 
   useEffect(() => { loadData(); }, [filter]);
 
+  useEffect(() => {
+    if (location.state?.openCreate && canManage) {
+      openCreate();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, canManage]);
+
   function openCreate() {
     setEditMeeting(null);
     setForm({ title: '', description: '', agenda: '', start_time: '', end_time: '',
@@ -70,6 +84,8 @@ export default function Meetings() {
     e.preventDefault();
     try {
       const payload = { ...form, participants: form.participants.map(Number) };
+      if (!payload.project_id) payload.project_id = null;
+      
       if (editMeeting) {
         await meetingService.updateMeeting(editMeeting.id, payload);
       } else {
@@ -134,8 +150,7 @@ export default function Meetings() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-meetings">
         <Navbar title="Toplantılar" />
         <div className="page-content">
           {loading ? (
@@ -148,8 +163,8 @@ export default function Meetings() {
                   <p className="page-subtitle">Tüm toplantıları planlayın ve yönetin</p>
                 </div>
                 {canManage && (
-                  <button className="btn btn-primary" onClick={openCreate}>
-                    ➕ Yeni Toplantı
+                  <button className="btn btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Plus size={16} /> Yeni Toplantı
                   </button>
                 )}
               </div>
@@ -158,14 +173,14 @@ export default function Meetings() {
               {stats && (
                 <div className="stats-grid animate-in">
                   {[
-                    { icon: '📅', label: 'Toplam', value: stats.total, color: 'var(--accent)' },
-                    { icon: '🟢', label: 'Planlanan', value: stats.scheduled, color: 'var(--warning)' },
-                    { icon: '⏰', label: 'Yaklaşan', value: stats.upcoming, color: 'var(--info)' },
-                    { icon: '✅', label: 'Tamamlanan', value: stats.completed, color: 'var(--success)' },
-                    { icon: '❌', label: 'İptal', value: stats.cancelled, color: 'var(--danger)' },
+                    { icon: <Calendar size={20} />, label: 'Toplam', value: stats.total, color: 'var(--accent)', bgColor: 'var(--accent-bg)' },
+                    { icon: <CheckCircle2 size={20} />, label: 'Planlanan', value: stats.scheduled, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
+                    { icon: <Clock size={20} />, label: 'Yaklaşan', value: stats.upcoming, color: 'var(--info)', bgColor: 'var(--info-bg)' },
+                    { icon: <CheckCircle size={20} />, label: 'Tamamlanan', value: stats.completed, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+                    { icon: <XCircle size={20} />, label: 'İptal', value: stats.cancelled, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
                   ].map((c, i) => (
-                    <div key={i} className="stat-card">
-                      <div className="stat-icon" style={{ background: `${c.color}15`, color: c.color }}>{c.icon}</div>
+                    <div key={i} className="stat-card" style={{ borderLeft: `4px solid ${c.color}` }}>
+                      <div className="stat-icon" style={{ background: c.bgColor, color: c.color }}>{c.icon}</div>
                       <div className="stat-info">
                         <div className="stat-value">{c.value}</div>
                         <div className="stat-label">{c.label}</div>
@@ -198,7 +213,7 @@ export default function Meetings() {
                 <div className="card-body" style={{ padding: 0 }}>
                   {meetings.length === 0 ? (
                     <div className="empty-state">
-                      <span className="empty-state-icon">📅</span>
+                      <span className="empty-state-icon"><Calendar size={48} strokeWidth={1} color="var(--text-muted)" /></span>
                       <div className="empty-state-title">Toplantı bulunamadı</div>
                       <p className="empty-state-text">Yeni bir toplantı oluşturmak için yukarıdaki butonu kullanın.</p>
                     </div>
@@ -223,7 +238,9 @@ export default function Meetings() {
                                 {m.title}
                               </div>
                               {m.project_name && (
-                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>📁 {m.project_name}</div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                                  <Folder size={12} /> {m.project_name}
+                                </div>
                               )}
                             </td>
                             <td>
@@ -233,7 +250,9 @@ export default function Meetings() {
                             <td style={{ fontSize: '0.82rem' }}>
                               {m.location || m.meeting_link ? (
                                 m.meeting_link ? (
-                                  <a href={m.meeting_link} target="_blank" rel="noreferrer" style={{ fontSize: '0.82rem' }}>🔗 Online</a>
+                                  <a href={m.meeting_link} target="_blank" rel="noreferrer" style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Link size={12} /> Online
+                                  </a>
                                 ) : m.location
                               ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                             </td>
@@ -245,11 +264,11 @@ export default function Meetings() {
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: 4 }}>
-                                <button className="btn-icon" title="Detay" onClick={() => setDetailMeeting(m)}>👁️</button>
+                                <button className="btn-icon" title="Detay" onClick={() => setDetailMeeting(m)}><Eye size={16} /></button>
                                 {canManage && (
                                   <>
-                                    <button className="btn-icon" title="Düzenle" onClick={() => openEdit(m)}>✏️</button>
-                                    <button className="btn-icon" title="Sil" onClick={() => handleDelete(m.id)}>🗑️</button>
+                                    <button className="btn-icon" title="Düzenle" onClick={() => openEdit(m)}><Edit2 size={16} /></button>
+                                    <button className="btn-icon" title="Sil" onClick={() => handleDelete(m.id)}><Trash2 size={16} /></button>
                                   </>
                                 )}
                               </div>
@@ -270,7 +289,7 @@ export default function Meetings() {
               <div className="modal-content" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">{editMeeting ? 'Toplantıyı Düzenle' : 'Yeni Toplantı'}</h2>
-                  <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
@@ -342,7 +361,7 @@ export default function Meetings() {
               <div className="modal-content" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">{detailMeeting.title}</h2>
-                  <button className="modal-close" onClick={() => setDetailMeeting(null)}>✕</button>
+                  <button className="modal-close" onClick={() => setDetailMeeting(null)}><X size={20} /></button>
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -350,7 +369,9 @@ export default function Meetings() {
                     {STATUS_LABELS[detailMeeting.status]}
                   </span>
                   {detailMeeting.project_name && (
-                    <span className="badge badge-active">📁 {detailMeeting.project_name}</span>
+                    <span className="badge badge-active" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Folder size={12} /> {detailMeeting.project_name}
+                    </span>
                   )}
                 </div>
 
@@ -364,13 +385,15 @@ export default function Meetings() {
                 {detailMeeting.meeting_link && (
                   <div style={{ marginBottom: 12 }}>
                     <a href={detailMeeting.meeting_link} target="_blank" rel="noreferrer"
-                       className="btn btn-primary btn-sm">🔗 Toplantıya Katıl</a>
+                       className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Link size={14} /> Toplantıya Katıl
+                    </a>
                   </div>
                 )}
 
                 {detailMeeting.agenda && (
                   <div style={{ marginBottom: 14 }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>📋 Gündem</h4>
+                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><ClipboardList size={16} /> Gündem</h4>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
                                   background: 'var(--bg-input)', padding: 10, borderRadius: 'var(--radius-md)' }}>
                       {detailMeeting.agenda}
@@ -380,14 +403,14 @@ export default function Meetings() {
 
                 {detailMeeting.description && (
                   <div style={{ marginBottom: 14 }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>📝 Açıklama</h4>
+                    <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><FileText size={16} /> Açıklama</h4>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{detailMeeting.description}</p>
                   </div>
                 )}
 
                 {/* Participants */}
                 <div style={{ marginBottom: 14 }}>
-                  <h4 style={{ fontSize: '0.85rem', marginBottom: 8 }}>👥 Katılımcılar ({detailMeeting.participants?.length || 0})</h4>
+                  <h4 style={{ fontSize: '0.85rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: '6px' }}><Users size={16} /> Katılımcılar ({detailMeeting.participants?.length || 0})</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {detailMeeting.participants?.map(p => (
                       <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8,
@@ -412,7 +435,7 @@ export default function Meetings() {
                   <div style={{ marginBottom: 14 }}>
                     {detailMeeting.notes && (
                       <div style={{ marginBottom: 10 }}>
-                        <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>📝 Notlar</h4>
+                        <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><FileText size={16} /> Notlar</h4>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
                                       background: 'var(--bg-input)', padding: 10, borderRadius: 'var(--radius-md)' }}>
                           {detailMeeting.notes}
@@ -421,7 +444,7 @@ export default function Meetings() {
                     )}
                     {detailMeeting.outcomes && (
                       <div>
-                        <h4 style={{ fontSize: '0.85rem', marginBottom: 6 }}>🎯 Sonuçlar</h4>
+                        <h4 style={{ fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: '6px' }}><Target size={16} /> Sonuçlar</h4>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap',
                                       background: 'var(--bg-input)', padding: 10, borderRadius: 'var(--radius-md)' }}>
                           {detailMeeting.outcomes}
@@ -434,11 +457,11 @@ export default function Meetings() {
                 {/* Actions */}
                 {canManage && detailMeeting.status === 'scheduled' && (
                   <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={() => handleStatusChange(detailMeeting.id, 'cancelled')}>
-                      ❌ İptal Et
+                    <button className="btn btn-secondary" onClick={() => handleStatusChange(detailMeeting.id, 'cancelled')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <XCircle size={16} /> İptal Et
                     </button>
-                    <button className="btn btn-primary" onClick={() => handleStatusChange(detailMeeting.id, 'completed')}>
-                      ✅ Tamamlandı
+                    <button className="btn btn-primary" onClick={() => handleStatusChange(detailMeeting.id, 'completed')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CheckCircle size={16} /> Tamamlandı
                     </button>
                   </div>
                 )}

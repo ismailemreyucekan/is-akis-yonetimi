@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
 import notificationService from '../../services/notificationService';
 import meetingService from '../../services/meetingService';
+import { 
+  ClipboardList, Hourglass, CheckCircle, AlertTriangle, 
+  RefreshCw, Folder, Calendar, Plus 
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function EmployeeDashboard() {
   const [stats, setStats] = useState(null);
@@ -34,8 +38,7 @@ export default function EmployeeDashboard() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-dashboard">
         <Navbar title="Dashboard" />
         <div className="page-content">
           {loading ? (
@@ -44,7 +47,7 @@ export default function EmployeeDashboard() {
             <>
               <div className="page-header">
                 <div>
-                  <h1 className="page-title">Hoş Geldiniz 👋</h1>
+                  <h1 className="page-title">Hoş Geldiniz</h1>
                   <p className="page-subtitle">Günlük görev özetiniz</p>
                 </div>
               </div>
@@ -52,13 +55,13 @@ export default function EmployeeDashboard() {
               {stats && (
                 <div className="stats-grid animate-in">
                   {[
-                    { icon: '📋', label: 'Toplam', value: stats.total, color: 'var(--accent)' },
-                    { icon: '⏳', label: 'Devam Eden', value: stats.in_progress, color: 'var(--warning)' },
-                    { icon: '✅', label: 'Tamamlanan', value: stats.done, color: 'var(--success)' },
-                    { icon: '⚠️', label: 'Geciken', value: stats.overdue, color: 'var(--danger)' },
+                    { icon: <ClipboardList size={20} />, label: 'Toplam', value: stats.total, color: 'var(--accent)', bgColor: 'var(--accent-bg)' },
+                    { icon: <Hourglass size={20} />, label: 'Devam Eden', value: stats.in_progress, color: 'var(--warning)', bgColor: 'var(--warning-bg)' },
+                    { icon: <CheckCircle size={20} />, label: 'Tamamlanan', value: stats.done, color: 'var(--success)', bgColor: 'var(--success-bg)' },
+                    { icon: <AlertTriangle size={20} />, label: 'Geciken', value: stats.overdue, color: 'var(--danger)', bgColor: 'var(--danger-bg)' },
                   ].map((c, i) => (
-                    <div key={i} className="stat-card">
-                      <div className="stat-icon" style={{ background: `${c.color}15`, color: c.color }}>{c.icon}</div>
+                    <div key={i} className="stat-card" style={{ borderLeft: `4px solid ${c.color}` }}>
+                      <div className="stat-icon" style={{ background: c.bgColor, color: c.color }}>{c.icon}</div>
                       <div className="stat-info">
                         <div className="stat-value">{c.value}</div>
                         <div className="stat-label">{c.label}</div>
@@ -73,16 +76,21 @@ export default function EmployeeDashboard() {
                   <div className="card-body">
                     <h3 className="section-title" style={{ marginBottom: 12 }}>Görevlerim</h3>
                     {todayTasks.length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Atanmış görev yok</p>
+                      <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+                        <div style={{ background: 'var(--bg-input)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                          <ClipboardList size={24} color="var(--text-muted)" />
+                        </div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Atanmış görev bulunmuyor</p>
+                      </div>
                     ) : todayTasks.filter(t => t.status !== 'done').slice(0, 6).map(t => (
-                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+                      <div key={t.id} className="list-item">
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                            {t.is_recurring && '🔄 '}{t.title}
+                          <div style={{ fontSize: '0.85rem', fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+                            {t.is_recurring && <RefreshCw size={14} style={{ marginRight: 6 }} />} {t.title}
                           </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                            {t.project_name && `📁 ${t.project_name} · `}
-                            {t.due_date ? `📅 ${new Date(t.due_date).toLocaleDateString('tr-TR')}` : 'Tarih yok'}
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center' }}>
+                            {t.project_name && <><Folder size={12} style={{ marginRight: 4 }} /> {t.project_name} <span style={{ margin: '0 6px' }}>·</span> </>}
+                            {t.due_date ? <><Calendar size={12} style={{ marginRight: 4 }} /> {new Date(t.due_date).toLocaleDateString('tr-TR')}</> : 'Tarih yok'}
                           </div>
                         </div>
                         <span className={`badge badge-${t.status === 'in_progress' ? 'progress' : t.status}`}>{statusLabels[t.status]}</span>
@@ -95,14 +103,26 @@ export default function EmployeeDashboard() {
                   {/* Upcoming Meetings */}
                   <div className="card">
                     <div className="card-body">
-                      <h3 className="section-title" style={{ marginBottom: 12 }}>📅 Yaklaşan Toplantılar</h3>
+                      <h3 className="section-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar size={18} /> Yaklaşan Toplantılar
+                      </h3>
                       {upcomingMeetings.length === 0 ? (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Yaklaşan toplantı yok</p>
+                        <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+                          <div style={{ background: 'var(--bg-input)', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                            <Calendar size={20} color="var(--text-muted)" />
+                          </div>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 12 }}>Yaklaşan toplantı yok</p>
+                          <Link to="/app/meetings" state={{ openCreate: true }} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <Plus size={14} /> Planla
+                          </Link>
+                        </div>
                       ) : upcomingMeetings.map(m => (
-                        <div key={m.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-light)' }}>
-                          <div style={{ fontSize: '0.82rem', fontWeight: 500 }}>{m.title}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                            {new Date(m.start_time).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        <div key={m.id} className="list-item">
+                          <div>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 500 }}>{m.title}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                              {new Date(m.start_time).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -114,9 +134,11 @@ export default function EmployeeDashboard() {
                     <div className="card-body">
                       <h3 className="section-title" style={{ marginBottom: 12 }}>Son Bildirimler</h3>
                       {notifications.length === 0 ? (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Bildirim yok</p>
+                        <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Yeni bildirim yok</p>
+                        </div>
                       ) : notifications.map(n => (
-                        <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-light)', opacity: n.is_read ? 0.6 : 1 }}>
+                        <div key={n.id} className="list-item" style={{ opacity: n.is_read ? 0.6 : 1, display: 'block' }}>
                           <div style={{ fontSize: '0.82rem', fontWeight: 500 }}>{n.title}</div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{n.message}</div>
                         </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import notificationService from '../../services/notificationService';
+import { Clock, Calendar, AlertCircle, RefreshCw, Hourglass, Save, CheckCircle, Bell, Lightbulb } from 'lucide-react';
 
 const TIMING_OPTIONS = [
   { value: 15, label: '15 dakika önce' },
@@ -18,9 +18,9 @@ const TIMING_OPTIONS = [
 ];
 
 const TYPE_LABELS = {
-  deadline: { icon: '⏰', title: 'Görev Son Tarihi', desc: 'Görevlerin son tarihine yaklaşıldığında hatırlatıcı gönder' },
-  meeting: { icon: '📅', title: 'Toplantı Hatırlatıcı', desc: 'Toplantı başlamadan önce hatırlatıcı gönder' },
-  overdue: { icon: '🔴', title: 'Gecikme Uyarısı', desc: 'Gecikmiş görevler için uyarı bildirimi gönder' },
+  deadline: { icon: <Clock size={24} />, title: 'Görev Son Tarihi', desc: 'Görevlerin son tarihine yaklaşıldığında hatırlatıcı gönder' },
+  meeting: { icon: <Calendar size={24} />, title: 'Toplantı Hatırlatıcı', desc: 'Toplantı başlamadan önce hatırlatıcı gönder' },
+  overdue: { icon: <AlertCircle size={24} />, title: 'Gecikme Uyarısı', desc: 'Gecikmiş görevler için uyarı bildirimi gönder' },
 };
 
 export default function NotificationSettings() {
@@ -79,8 +79,7 @@ export default function NotificationSettings() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-settings">
         <Navbar title="Bildirim Ayarları" />
         <div className="page-content">
           {loading ? (
@@ -94,12 +93,12 @@ export default function NotificationSettings() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {canManage && (
-                    <button className="btn btn-secondary" onClick={handleTriggerCheck}>
-                      🔄 Kontrol Et
+                    <button className="btn btn-secondary" onClick={handleTriggerCheck} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <RefreshCw size={16} /> Kontrol Et
                     </button>
                   )}
-                  <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                    {saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
+                  <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {saving ? <><Hourglass size={16} /> Kaydediliyor...</> : <><Save size={16} /> Kaydet</>}
                   </button>
                 </div>
               </div>
@@ -107,13 +106,13 @@ export default function NotificationSettings() {
               {checkResult && (
                 <div className="card" style={{ marginBottom: 16, borderColor: 'var(--success)' }}>
                   <div className="card-body">
-                    <h3 className="section-title" style={{ marginBottom: 8, color: 'var(--success)' }}>
-                      ✅ Hatırlatıcı Kontrolü Tamamlandı
+                    <h3 className="section-title" style={{ marginBottom: 8, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CheckCircle size={20} /> Hatırlatıcı Kontrolü Tamamlandı
                     </h3>
                     <div style={{ display: 'flex', gap: 20, fontSize: '0.85rem' }}>
-                      <span>⏰ Son Tarih: <strong>{checkResult.deadline_reminders}</strong></span>
-                      <span>🔴 Gecikme: <strong>{checkResult.overdue_warnings}</strong></span>
-                      <span>📅 Toplantı: <strong>{checkResult.meeting_reminders}</strong></span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={16} /> Son Tarih: <strong>{checkResult.deadline_reminders}</strong></span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><AlertCircle size={16} /> Gecikme: <strong>{checkResult.overdue_warnings}</strong></span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={16} /> Toplantı: <strong>{checkResult.meeting_reminders}</strong></span>
                     </div>
                   </div>
                 </div>
@@ -122,14 +121,14 @@ export default function NotificationSettings() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {configs.map(config => {
                   const meta = TYPE_LABELS[config.reminder_type] || {
-                    icon: '🔔', title: config.reminder_type, desc: ''
+                    icon: <Bell size={24} />, title: config.reminder_type, desc: ''
                   };
                   return (
                     <div key={config.id} className="card">
                       <div className="card-body">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 200 }}>
-                            <span style={{ fontSize: '1.6rem' }}>{meta.icon}</span>
+                            <span style={{ display: 'flex', alignItems: 'center' }}>{meta.icon}</span>
                             <div>
                               <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{meta.title}</div>
                               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>{meta.desc}</div>
@@ -169,7 +168,7 @@ export default function NotificationSettings() {
               {/* Info */}
               <div className="card" style={{ marginTop: 20, borderColor: 'var(--info)', borderStyle: 'dashed' }}>
                 <div className="card-body" style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <span style={{ fontSize: '1.3rem' }}>💡</span>
+                  <span style={{ display: 'flex', alignItems: 'center', color: 'var(--info)' }}><Lightbulb size={24} /></span>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                     <strong>Nasıl çalışır?</strong>
                     <ul style={{ marginTop: 6, paddingLeft: 16, lineHeight: 1.8 }}>

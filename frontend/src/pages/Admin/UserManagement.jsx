@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import adminService from '../../services/adminService';
 import api from '../../services/api';
+import { Edit2, Ban, X } from 'lucide-react';
 
 const ROLES = [
   { value: 'admin', label: 'Admin' },
@@ -79,8 +79,7 @@ export default function UserManagement() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-settings">
         <Navbar title="Kullanıcı Yönetimi" />
         <div className="page-content">
           <div className="page-header">
@@ -138,9 +137,9 @@ export default function UserManagement() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn-icon" onClick={() => openEdit(u)} title="Düzenle">✏️</button>
+                          <button className="btn-icon" onClick={() => openEdit(u)} title="Düzenle"><Edit2 size={16} /></button>
                           {u.is_active && u.role !== 'admin' && (
-                            <button className="btn-icon" onClick={() => handleDeactivate(u)} title="Pasife Al" style={{ color: 'var(--danger)' }}>🚫</button>
+                            <button className="btn-icon" onClick={() => handleDeactivate(u)} title="Pasife Al" style={{ color: 'var(--danger)' }}><Ban size={16} /></button>
                           )}
                         </div>
                       </td>
@@ -156,7 +155,7 @@ export default function UserManagement() {
               <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
                 <div className="modal-header">
                   <h2 className="modal-title">{editUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı'}</h2>
-                  <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                   <div className="form-row">

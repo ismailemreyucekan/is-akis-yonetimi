@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import Sidebar from '../../components/Layout/Sidebar';
 import Navbar from '../../components/Layout/Navbar';
 import taskService from '../../services/taskService';
 import authService from '../../services/authService';
 import projectService from '../../services/projectService';
+import { Plus, X } from 'lucide-react';
 
 const COLUMNS = [
   { id: 'todo', title: 'Yapılacak', color: 'var(--text-muted)' },
@@ -87,8 +87,7 @@ export default function TeamBoard() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="main-content">
+      <div className="main-content bg-tasks">
         <Navbar title="Takım Panosu" />
         <div className="page-content">
           <div className="page-header">
@@ -101,7 +100,7 @@ export default function TeamBoard() {
                 <option value="">Tüm Projeler</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Görev</button>
+              <button className="btn btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Görev</button>
             </div>
           </div>
 
@@ -187,7 +186,7 @@ export default function TeamBoard() {
               <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2 className="modal-title">Yeni Görev</h2>
-                  <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                  <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
                 </div>
                 <form onSubmit={handleCreateTask}>
                   <div className="form-group">
